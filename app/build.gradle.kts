@@ -57,8 +57,9 @@ dependencies {
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.gson)
 
-    // Glide Compose
-    implementation(libs.glide.compose)
+    // Coil Image Loading
+    implementation(libs.coil.kt)
+    implementation(libs.coil.compose)
 
     // Koin DI
     implementation(libs.koin.core)

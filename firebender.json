@@ -1,0 +1,25 @@
+{
+  "rules": [
+    "If use lib, use version toml",
+    "ALWAYS read figma and recheck before create UI",
+    "Don't hardcode dpi, use pxToDp() function",
+    "Use `@SerializedName` for data/retrofit classes",
+    "Less follow M3, draw UI by row, column, ... and flexible use modifier",
+    "Use Kotlin coroutines and Flow for asynchronous operations",
+    "Generate to correct folder, high recommend divide to components in others file in package",
+    "Color will create / reuse color from AppColor",
+    "With view can reuse, use LazyRow, LazyColumn instead of write independence",
+    "FORCE Ui will draw by compose, not any xml"
+  ],
+  "mcpServers": {
+    "Framelink Figma MCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "figma-developer-mcp",
+        "--figma-api-key=figd_znH0jgOq5dt8AglKma87z9p0hXV6FTDa8FoMdf-f",
+        "--stdio"
+      ]
+    }
+  }
+}
