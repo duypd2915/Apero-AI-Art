@@ -39,7 +39,6 @@ fun AperoAiArtTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
         content = content
     )
 }

@@ -2,4 +2,6 @@
     <string name="app_name">Apero Ai Art</string>
     <string name="btn_generate_art">Generate AI</string>
     <string name="choose_style">Choose your Style</string>
+    <string name="enter_prompt">Enter your prompy</string>
+    <string name="add_your_photo">Add your photo</string>
 </resources>
