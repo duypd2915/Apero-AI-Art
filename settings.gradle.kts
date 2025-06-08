@@ -17,9 +17,17 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
+        maven {
+            url = uri("https://artifactory.apero.vn/artifactory/gradle-release/")
+            credentials {
+                username = "deployer"
+                password = "apero@123"
+            }
+        }
     }
 }
 
-rootProject.name = "Apero Ai Art"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+rootProject.name = "AperoAiArt"
 include(":app")
 include(":AI_Art_Service")
