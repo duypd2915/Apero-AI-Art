@@ -1,6 +1,6 @@
 package com.apero.aperoaiart.di
 
-import com.apero.aperoaiart.ui.screen.StyleViewModel
+import com.apero.aperoaiart.ui.screen.style.StyleViewModel
 import com.apero.aperoaiart.utils.PermissionUtil
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope

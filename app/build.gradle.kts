@@ -50,12 +50,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    // Retrofit & Networking
-    implementation(libs.retrofit.core)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
-    implementation(libs.gson)
+    // Navigation Compose
+    implementation(libs.androidx.navigation.compose)
 
     // Coil Image Loading
     implementation(libs.coil.kt)
