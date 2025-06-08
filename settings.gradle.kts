@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Apero Ai Art"
 include(":app")
- 
+include(":AI_Art_Service")
