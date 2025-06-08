@@ -1,4 +1,4 @@
-package com.apero.aperoaiart.ui.data
+package com.apero.aperoaiart.data
 
 data class StyleModel(
     val id: Int,

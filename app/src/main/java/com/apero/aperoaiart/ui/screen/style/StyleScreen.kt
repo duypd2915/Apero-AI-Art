@@ -1,4 +1,4 @@
-package com.apero.aperoaiart.ui.screen
+package com.apero.aperoaiart.ui.screen.style
 
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -40,27 +40,31 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import com.apero.aperoaiart.R
-import com.apero.aperoaiart.ui.data.StyleModel
+import com.apero.aperoaiart.base.BaseUIState
+import com.apero.aperoaiart.data.StyleModel
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
 import com.apero.aperoaiart.utils.PermissionUtil
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
 fun StyleScreen(
     modifier: Modifier = Modifier,
-    permissionUtil: PermissionUtil = koinInject()
+    permissionUtil: PermissionUtil = koinInject(),
+    viewModel: StyleViewModel = koinViewModel()
 ) {
     var editTextValue by remember { mutableStateOf("") }
     val context = LocalContext.current
     val activity = LocalActivity.current
     val focusManager = LocalFocusManager.current
     var hasSelectImage by remember { mutableStateOf(false) }
-
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     val launcher = rememberLauncherForActivityResult(
@@ -98,6 +102,15 @@ fun StyleScreen(
                 })
             }
     ) {
+        if (uiState.state is BaseUIState.Loading) {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(AppColor.BackgroundLoading)
+            ) {
+                // TODO: wait lottie
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -141,27 +154,40 @@ fun StyleScreen(
                         shape = RoundedCornerShape(16.pxToDp()),
                         color = AppColor.Primary,
                         width = 2.pxToDp()
-                    )
-                    .clickable {
-                        if (!permissionUtil.hasStoragePermission()) {
-                            cameraLauncher.launch(permissionUtil.getStoragePermission())
-                        } else {
-                            launcher.launch("image/*")
-                        }
-                    },
+                    ),
             ) {
                 if (hasSelectImage) {
-                    AsyncImage(
-                        model = selectedImageUri,
-                        contentDescription = "",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.clip(RoundedCornerShape(16.pxToDp())),
-                        imageLoader = ImageLoader.Builder(context).build(),
-                    )
+                    Box {
+                        Image(
+                            painter = painterResource(id = R.drawable.change_photo),
+                            contentDescription = "",
+                            alignment = Alignment.TopStart,
+                            modifier = Modifier
+                                .padding(top = 18.pxToDp(), start = 23.pxToDp())
+                                .clickable {
+                                    launcher.launch("image/*")
+                                }
+                        )
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = "",
+                            contentScale = ContentScale.FillHeight,
+                            modifier = Modifier.clip(RoundedCornerShape(16.pxToDp())),
+                            imageLoader = ImageLoader.Builder(context).build(),
+                        )
+                    }
+
                 } else {
                     Column(
                         modifier = Modifier
-                            .align(Alignment.Center),
+                            .align(Alignment.Center)
+                            .clickable {
+                                if (!permissionUtil.hasStoragePermission()) {
+                                    cameraLauncher.launch(permissionUtil.getStoragePermission())
+                                } else {
+                                    launcher.launch("image/*")
+                                }
+                            },
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.pxToDp())
                     ) {

@@ -7,6 +7,7 @@ object AppColor {
     val Primary = Color(0xFFE400D9)
     val Secondary = Color(0xFFCCC2DC)
     val Background = Color(0xFFFFFFFF)
+    val BackgroundLoading = Color(0xFFF5F5F5)
     val ButtonGradient = Brush.horizontalGradient(
         listOf(Color(0xFFE400D9), Color(0xFF1D00F5)),
     )
