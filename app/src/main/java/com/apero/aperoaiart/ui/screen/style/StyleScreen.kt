@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -41,11 +42,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.ImageLoader
 import coil.compose.AsyncImage
 import com.apero.aperoaiart.R
 import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.data.StyleModel
+import com.apero.aperoaiart.ui.components.BottomButton
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
@@ -102,7 +103,7 @@ fun StyleScreen(
                 })
             }
     ) {
-        if (uiState.state is BaseUIState.Loading) {
+        if (uiState.genArtState is BaseUIState.Loading) {
             Box(
                 modifier = modifier
                     .fillMaxSize()
@@ -157,7 +158,14 @@ fun StyleScreen(
                     ),
             ) {
                 if (hasSelectImage) {
-                    Box {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = "",
+                            contentScale = ContentScale.FillHeight,
+                            modifier = Modifier
+                                .align(Alignment.Center),
+                        )
                         Image(
                             painter = painterResource(id = R.drawable.change_photo),
                             contentDescription = "",
@@ -167,13 +175,6 @@ fun StyleScreen(
                                 .clickable {
                                     launcher.launch("image/*")
                                 }
-                        )
-                        AsyncImage(
-                            model = selectedImageUri,
-                            contentDescription = "",
-                            contentScale = ContentScale.FillHeight,
-                            modifier = Modifier.clip(RoundedCornerShape(16.pxToDp())),
-                            imageLoader = ImageLoader.Builder(context).build(),
                         )
                     }
 
@@ -215,39 +216,25 @@ fun StyleScreen(
                     color = AppColor.Primary,
                     style = AppTypography.StyleChooseItem
                 )
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(11.pxToDp())
-                ) {
-                    items(5) {
-                        StyleItem(
-                            model = StyleModel(
-                                id = 1,
-                                name = "Novelistic",
-                                image = "https://picsum.photos/200/300" // Random image from Picsum
+                if (uiState.styleList is BaseUIState.Success) {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(11.pxToDp())
+                    ) {
+                        items((uiState.styleList as BaseUIState.Success<List<StyleModel>>).data) {
+                            StyleItem(
+                                model = it
                             )
-                        )
+                        }
                     }
                 }
             }
         }
 
-        Text(
-            text = stringResource(R.string.btn_generate_art),
+        BottomButton(
+            isEnabled = hasSelectImage,
             modifier = Modifier
-                .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 82.pxToDp())
-                .background(
-                    alpha = if (hasSelectImage) 1f else 0.5f,
-                    brush = AppColor.ButtonGradient,
-                    shape = RoundedCornerShape(12.pxToDp())
-                )
-                .padding(vertical = 16.pxToDp())
-                .padding(horizontal = 8.pxToDp()),
-            color = AppColor.TextWhite,
-            textAlign = TextAlign.Center,
-            style = AppTypography.StyleChooseItem,
         )
     }
 }

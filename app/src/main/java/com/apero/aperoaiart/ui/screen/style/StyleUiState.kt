@@ -1,8 +1,10 @@
 package com.apero.aperoaiart.ui.screen.style
 
 import com.apero.aperoaiart.base.BaseUIState
-import com.apero.aperoaiart.data.ResultModel
+import com.apero.aperoaiart.data.StyleModel
 
 data class StyleUiState(
-    val state: BaseUIState<ResultModel> = BaseUIState.Idle
+    // TODO
+    val genArtState: BaseUIState<StyleModel> = BaseUIState.Idle,
+    val styleList: BaseUIState<List<StyleModel>> = BaseUIState.Idle
 )
