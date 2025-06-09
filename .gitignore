@@ -3,7 +3,7 @@
 /local.properties
 .DS_Store
 .idea
-misc.iml
+misc.xml
 /build
 /captures
 .externalNativeBuild

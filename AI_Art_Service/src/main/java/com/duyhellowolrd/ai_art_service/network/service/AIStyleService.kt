@@ -5,6 +5,6 @@ import retrofit2.Response
 import retrofit2.http.GET
 
 interface AIStyleService {
-    @GET("v2/styles?page=1&limit=10&project=Artimind")
+    @GET("category?project=techtrek&segmentValue=IN&styleType=imageToImage&isApp=true")
     suspend fun getStyles(): Response<StyleResponse>
 }

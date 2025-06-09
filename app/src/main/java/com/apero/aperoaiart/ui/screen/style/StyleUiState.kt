@@ -6,5 +6,7 @@ import com.apero.aperoaiart.data.StyleModel
 data class StyleUiState(
     // TODO
     val genArtState: BaseUIState<StyleModel> = BaseUIState.Idle,
-    val styleList: BaseUIState<List<StyleModel>> = BaseUIState.Idle
+    val styleList: BaseUIState<List<StyleModel>> = BaseUIState.Idle,
+    val prompt: String = "",
+    val imageUrl: String = ""
 )

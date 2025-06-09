@@ -13,7 +13,7 @@ class App : Application() {
         AiArtServiceEntry.init(
             apiKey = Constants.API_KEY,
             appName = Constants.APP_NAME,
-            bundleId = Constants.BUNDLE_ID
+            bundleId = Constants.BUNDLE_ID,
         )
     }
 }

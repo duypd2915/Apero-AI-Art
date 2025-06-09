@@ -20,6 +20,7 @@ class SignatureInterceptor : Interceptor {
             AiArtServiceEntry.timeStamp
         )
         Log.d(TAG, "intercept: signatureData = $signatureData")
+        Log.d(TAG, "intercept: bundleId = ${AiArtServiceEntry.BUNDLE_ID}")
         val tokenIntegrity =
             signatureData.tokenIntegrity.ifEmpty { ServiceConstants.NOT_GET_API_TOKEN }
         Log.d(TAG, "intercept: tokenIntegrity = $tokenIntegrity")
