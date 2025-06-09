@@ -1,5 +1,6 @@
 package com.apero.aperoaiart.ui.screen.style
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.apero.aperoaiart.base.BaseUIState
@@ -28,9 +29,23 @@ class StyleViewModel(
         }
     }
 
+    fun updateCurrentImage(newUri: Uri?) {
+        updateState { state ->
+            state.copy(imageUrl = newUri)
+        }
+    }
+
+    fun updatePrompt(newPrompt: String) {
+        updateState { state ->
+            state.copy(prompt = newPrompt)
+        }
+    }
+
+    fun isCurrentImageValid() = uiState.value.imageUrl != null
+
     fun generateImage() {
         updateState {
-            it.copy(genArtState = BaseUIState.Loading)
+            it.copy(selectedStyle = BaseUIState.Loading)
         }
         viewModelScope.launch {
             savedStateHandle[SaveStateConstants.KEY_IMAGE_URI] = uiState.value.imageUrl

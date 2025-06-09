@@ -27,15 +27,11 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,31 +56,23 @@ fun StyleScreen(
     permissionUtil: PermissionUtil = koinInject(),
     viewModel: StyleViewModel = koinViewModel()
 ) {
-    var editTextValue by remember { mutableStateOf("") }
-    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
     val focusManager = LocalFocusManager.current
-    var hasSelectImage by remember { mutableStateOf(false) }
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
-        if (uri != null)
-            hasSelectImage = true
+        viewModel.updateCurrentImage(uri)
     }
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (activity != null) {
-            if (isGranted) {
-                launcher.launch("image/*")
-            } else {
-                if (!permissionUtil.canShowStorageRational(activity)) {
-                    permissionUtil.openAppSettings(activity)
-                }
+        if (isGranted) {
+            launcher.launch("image/*")
+        } else {
+            if (activity == null) return@rememberLauncherForActivityResult
+            if (!permissionUtil.canShowStorageRational(activity)) {
+                permissionUtil.openAppSettings(activity)
             }
         }
     }
@@ -103,7 +91,7 @@ fun StyleScreen(
                 })
             }
     ) {
-        if (uiState.genArtState is BaseUIState.Loading) {
+        if (uiState.selectedStyle is BaseUIState.Loading) {
             Box(
                 modifier = modifier
                     .fillMaxSize()
@@ -119,8 +107,8 @@ fun StyleScreen(
             verticalArrangement = Arrangement.spacedBy(27.pxToDp())
         ) {
             TextField(
-                value = editTextValue,
-                onValueChange = { editTextValue = it },
+                value = uiState.prompt,
+                onValueChange = { viewModel.updatePrompt(it) },
                 shape = RoundedCornerShape(16.pxToDp()),
                 label = {
                     Text(
@@ -157,10 +145,10 @@ fun StyleScreen(
                         width = 2.pxToDp()
                     ),
             ) {
-                if (hasSelectImage) {
+                if (viewModel.isCurrentImageValid()) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         AsyncImage(
-                            model = selectedImageUri,
+                            model = uiState.imageUrl,
                             contentDescription = "",
                             contentScale = ContentScale.FillHeight,
                             modifier = Modifier
@@ -216,23 +204,29 @@ fun StyleScreen(
                     color = AppColor.Primary,
                     style = AppTypography.StyleChooseItem
                 )
-                if (uiState.styleList is BaseUIState.Success) {
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(11.pxToDp())
-                    ) {
-                        items((uiState.styleList as BaseUIState.Success<List<StyleModel>>).data) {
-                            StyleItem(
-                                model = it
-                            )
+                when (val styleList = uiState.styleList) {
+                    is BaseUIState.Success -> {
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(11.pxToDp())
+                        ) {
+                            items(styleList.data) {
+                                StyleItem(
+                                    model = it
+                                )
+                            }
                         }
                     }
+
+                    is BaseUIState.Loading -> {}
+                    is BaseUIState.Error -> {}
+                    is BaseUIState.Idle -> {}
                 }
             }
         }
 
         BottomButton(
-            isEnabled = hasSelectImage,
+            isEnabled = viewModel.isCurrentImageValid(),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
         )

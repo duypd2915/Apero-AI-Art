@@ -1,11 +1,12 @@
 package com.duyhellowolrd.ai_art_service.network.response
 
+import com.duyhellowolrd.ai_art_service.network.consts.ServiceConstants
 import com.google.gson.annotations.SerializedName
 
 data class StyleResponse(
     @SerializedName("data") val data: StyleData,
-    @SerializedName("statusCode") val statusCode: Int,
-    @SerializedName("success") val success: Boolean
+    @SerializedName("statusCode") val statusCode: Int = ServiceConstants.CODE_SUCCESS,
+    @SerializedName("success") val success: Boolean = true
 )
 
 data class StyleData(
