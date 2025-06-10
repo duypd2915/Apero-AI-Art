@@ -1,6 +1,7 @@
 package com.apero.aperoaiart.ui.screen.style
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.apero.aperoaiart.base.BaseUIState
@@ -9,6 +10,7 @@ import com.apero.aperoaiart.data.StyleModel
 import com.apero.aperoaiart.data.toModel
 import com.apero.aperoaiart.navigation.SaveStateConstants
 import com.duyhellowolrd.ai_art_service.data.AiArtRepository
+import com.duyhellowolrd.ai_art_service.data.params.AiArtParams
 import com.duyhellowolrd.ai_art_service.network.consts.ServiceConstants
 import kotlinx.coroutines.launch
 
@@ -28,6 +30,11 @@ class StyleViewModel(
                     categories =
                         responseApi.fold(
                             onSuccess = { data ->
+                                Log.d("StyleViewModel", "categories: ${data.items.map { it.id }}")
+                                Log.d(
+                                    "StyleViewModel",
+                                    "styles id: ${data.items.flatMap { it.styles.map { it.id } }}"
+                                )
                                 BaseUIState.Success(data.items.map { it.toModel() })
                             },
                             onFailure = { exception ->
@@ -60,6 +67,7 @@ class StyleViewModel(
     }
 
     fun updateSelectedStyle(styleModel: StyleModel) {
+        Log.d("StyleViewModel", "updateSelectedStyle: ${styleModel.id}")
         updateState { state ->
             state.copy(selectedStyle = styleModel)
         }
@@ -72,10 +80,30 @@ class StyleViewModel(
             it.copy(generatingState = BaseUIState.Loading)
         }
         viewModelScope.launch {
-            savedStateHandle[SaveStateConstants.KEY_IMAGE_URI] = uiState.value.imageUrl
+            val uiStateValue = uiState.value
+            if (uiStateValue.imageUrl == null) return@launch
+            val genResult = aiArtRepository.genArtAi(
+                params = AiArtParams(
+                    prompt = uiStateValue.prompt,
+                    styleId = uiStateValue.selectedStyle?.id ?: "",
+                    positivePrompt = uiStateValue.prompt,
+                    negativePrompt = uiStateValue.prompt,
+                    imageUri = uiStateValue.imageUrl
+                )
+            )
+            genResult.fold(
+                onSuccess = {
+                    Log.d("StyleViewModel", "generateImage: ok")
+                    savedStateHandle[SaveStateConstants.KEY_IMAGE_URI] = uiState.value.imageUrl
+                    onSuccess()
+                },
+                onFailure = {
+                    Log.e("StyleViewModel", "generateImage: error", it)
+                }
+            )
+
         }
     }
-
 }
 
 

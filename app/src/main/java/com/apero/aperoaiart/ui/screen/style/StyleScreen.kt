@@ -114,7 +114,6 @@ fun StyleScreen(
             }
         }
     )
-
 }
 
 @Composable

@@ -6,6 +6,7 @@ import com.duyhellowolrd.ai_art_service.network.ApiClient
 import com.duyhellowolrd.ai_art_service.network.service.AIStyleService
 import com.duyhellowolrd.ai_art_service.network.service.AiArtService
 import com.duyhellowolrd.ai_art_service.network.service.TimeStampService
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 internal val serviceModule = module {
@@ -15,7 +16,7 @@ internal val serviceModule = module {
 }
 
 internal val repositoryModule = module {
-    single<AiArtRepository> { AiArtRepositoryImpl(get(), get(), get()) }
+    single<AiArtRepository> { AiArtRepositoryImpl(androidContext(), get(), get(), get()) }
 }
 
 val aiServiceModule = listOf(

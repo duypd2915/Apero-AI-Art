@@ -13,6 +13,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Url
 
 interface AiArtService {
+
     @PUT
     suspend fun pushImageToServer(
         @Url url: String,
