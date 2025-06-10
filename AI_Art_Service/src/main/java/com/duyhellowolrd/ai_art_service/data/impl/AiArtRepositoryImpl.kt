@@ -23,15 +23,9 @@ class AiArtRepositoryImpl(
     override suspend fun genArtAi(params: AiArtParams): Result<File> {
         try {
             val timestamp = timeStampService.getTimestamp()
-            Log.d(TAG, "genArtAi: timestamp ${timestamp.raw()}")
-            Log.d(TAG, "genArtAi: timestamp error ${timestamp.errorBody()?.string()}")
             AiArtServiceEntry.setTimeStamp(timestamp.body()?.data?.timestamp)
             val presignedLink = aiArtService.getLink()
-            Log.d(TAG, "genArtAi: presignedLink ${presignedLink.raw()}")
-            Log.d(TAG, "genArtAi: presignedLink error ${presignedLink.errorBody()?.string()}")
             val test = aiArtService.genArtAi(AiArtRequest.Default)
-            Log.d(TAG, "genArtAi: test ${test.raw()}")
-            Log.d(TAG, "genArtAi: test error ${test.errorBody()?.string()}")
         } catch (e: Exception) {
             Log.e(TAG, "genArtAi error", e)
         }

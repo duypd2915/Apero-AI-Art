@@ -11,7 +11,8 @@ class ResultViewModel(
     private val aiArtRepository: AiArtRepository,
     private val savedStateHandle: SavedStateHandle
 ) : BaseViewModel<ResultUiState>(ResultUiState()) {
-    init {
+
+    fun calltest() {
         viewModelScope.launch {
             aiArtRepository.genArtAi(AiArtParams.Default)
         }
