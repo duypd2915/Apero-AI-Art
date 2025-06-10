@@ -5,10 +5,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.base.BaseViewModel
+import com.apero.aperoaiart.data.StyleModel
 import com.apero.aperoaiart.data.toModel
 import com.apero.aperoaiart.navigation.SaveStateConstants
 import com.duyhellowolrd.ai_art_service.data.AiArtRepository
-import com.duyhellowolrd.ai_art_service.network.response.StyleData
+import com.duyhellowolrd.ai_art_service.network.consts.ServiceConstants
 import kotlinx.coroutines.launch
 
 class StyleViewModel(
@@ -18,12 +19,23 @@ class StyleViewModel(
 
     init {
         viewModelScope.launch {
+            updateState {
+                it.copy(categories = BaseUIState.Loading)
+            }
             val responseApi = aiArtRepository.getAllStyles()
             updateState { state ->
                 state.copy(
-                    styleList = BaseUIState.Success(
-                        responseApi.getOrDefault(StyleData()).items
-                            .map { it.toModel() })
+                    categories =
+                        responseApi.fold(
+                            onSuccess = { data ->
+                                BaseUIState.Success(data.items.map { it.toModel() })
+                            },
+                            onFailure = { exception ->
+                                BaseUIState.Error(
+                                    exception.message ?: ServiceConstants.UNKNOWN_ERROR_MESSAGE
+                                )
+                            }
+                        )
                 )
             }
         }
@@ -35,17 +47,29 @@ class StyleViewModel(
         }
     }
 
+    fun updateTabIndex(newTabIndex: Int) {
+        updateState { state ->
+            state.copy(tabIndex = newTabIndex)
+        }
+    }
+
     fun updatePrompt(newPrompt: String) {
         updateState { state ->
             state.copy(prompt = newPrompt)
         }
     }
 
+    fun updateSelectedStyle(styleModel: StyleModel) {
+        updateState { state ->
+            state.copy(selectedStyle = styleModel)
+        }
+    }
+
     fun isCurrentImageValid() = uiState.value.imageUrl != null
 
-    fun generateImage() {
+    fun generateImage(onSuccess: () -> Unit) {
         updateState {
-            it.copy(selectedStyle = BaseUIState.Loading)
+            it.copy(generatingState = BaseUIState.Loading)
         }
         viewModelScope.launch {
             savedStateHandle[SaveStateConstants.KEY_IMAGE_URI] = uiState.value.imageUrl
