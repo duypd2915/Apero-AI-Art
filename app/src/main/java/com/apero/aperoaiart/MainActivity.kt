@@ -19,7 +19,8 @@ class MainActivity : ComponentActivity() {
             AperoAiArtTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
 //                    StyleScreen(
-//                        modifier = Modifier.padding(innerPadding)
+//                        modifier = Modifier.padding(innerPadding),
+//                        onGenerateSuccess = { /*TODO*/ }
 //                    )
                     ResultScreen(
                         modifier = Modifier.padding(innerPadding),
