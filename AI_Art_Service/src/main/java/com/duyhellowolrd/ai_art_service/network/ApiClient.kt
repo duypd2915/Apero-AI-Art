@@ -2,6 +2,7 @@ package com.duyhellowolrd.ai_art_service.network
 
 import com.duyhellowolrd.ai_art_service.AiArtServiceEntry
 import com.duyhellowolrd.ai_art_service.network.interceptors.SignatureInterceptor
+import com.duyhellowolrd.ai_art_service.network.interceptors.createLoggingInterceptor
 import com.duyhellowolrd.ai_art_service.network.service.AIStyleService
 import com.duyhellowolrd.ai_art_service.network.service.AiArtService
 import com.duyhellowolrd.ai_art_service.network.service.TimeStampService
@@ -23,6 +24,7 @@ object ApiClient {
             .writeTimeout(REQUEST_TIMEOUT, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .addInterceptor(SignatureInterceptor())
+            .addInterceptor(createLoggingInterceptor())
             .build()
     }
 

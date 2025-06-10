@@ -6,6 +6,7 @@ object ServiceConstants {
     const val UNKNOWN_ERROR_MESSAGE = "unknown_error_message"
     const val ERROR_TIME_OUT_MESSAGE = "error_time_out_message"
     const val SAVE_FILE_ERROR = "save_file_failed"
+    const val CODE_SUCCESS = 200
     const val CODE_UNKNOWN_ERROR = 9999
     const val CODE_FILE_NULL = 1000
     const val CODE_PARSING_ERROR = 1001
