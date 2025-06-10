@@ -12,8 +12,10 @@ object AppColor {
         listOf(Color(0xFFE400D9), Color(0xFF1D00F5)),
     )
     val Transparent = Color(0x00000000)
+    val BorderBlue = Color(0xFF1D00F5).copy(alpha = 0.3f)
 
     val TextPrimary = Color(0xFF000000)
     val TextSecondary = Color(0xFFAAAAAA)
     val TextWhite = Color(0xFFFFFFFF)
+    val TextBlue = Color(0xFF1D00F5).copy(alpha = 0.9f)
 }

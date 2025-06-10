@@ -31,4 +31,10 @@ object AppTypography {
         lineHeight = 16.sp,
         letterSpacing = 0.sp
     )
+
+    val StyleCategory = TextStyle(
+        fontFamily = FontFamily(Font(R.font.plus_jakarta_sans)),
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+    )
 }
