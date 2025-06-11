@@ -16,7 +16,6 @@ import com.duyhellowolrd.ai_art_service.network.service.TimeStampService
 import com.duyhellowolrd.ai_art_service.utils.FileUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
 
 class AiArtRepositoryImpl(
     private val context: Context,
@@ -28,7 +27,7 @@ class AiArtRepositoryImpl(
         private const val TAG = "AiArtRepositoryImpl"
     }
 
-    override suspend fun genArtAi(params: AiArtParams): Result<File> {
+    override suspend fun genArtAi(params: AiArtParams): Result<String> {
         try {
             Log.d(TAG, "genArtAi: start gen ${params.imageUri.path}")
             if (!FileUtils.checkImageExtension(context, params.imageUri)) {
@@ -66,7 +65,6 @@ class AiArtRepositoryImpl(
                 "genArtAi: pushToServer ${pushToServer.code()} ${pushToServer.message()} ${pushToServer.errorBody()}"
             )
             if (pushToServer.isSuccessful) {
-//                withTimeout(ServiceConstants.TIME_OUT_SECONDS) {
                 val request = createMultipartBodyAiArt(params, presignedLink.path)
                 Log.d(TAG, "genArtAi: start calling genAI $request")
                 val response = aiArtService.genArtAi(request)
@@ -74,9 +72,17 @@ class AiArtRepositoryImpl(
                     TAG,
                     "genArtAi: response ${response.raw()} error ${response.errorBody()?.string()}"
                 )
-//                }
+                val urlResult = response.body()?.data?.url ?: ""
+                return if (response.isSuccessful && urlResult.isNotEmpty())
+                    Result.success(urlResult)
+                else {
+                    Log.d(TAG, "genArtAi: error when genAI ${response.message()}")
+                    Result.failure(AiArtException(ErrorReason.GenerateImageError))
+                }
+            } else {
+                Log.d(TAG, "genArtAi: error when pushToServer ${pushToServer.message()}")
+                return Result.failure(AiArtException(ErrorReason.GenerateImageError))
             }
-            return Result.success(imageFile)
         } catch (e: Exception) {
             Log.e(TAG, "genArtAi error", e)
             return Result.failure(e)
@@ -84,7 +90,25 @@ class AiArtRepositoryImpl(
     }
 
     override suspend fun getAllStyles(): Result<StyleData> {
-        return Result.success(styleService.getStyles().body()?.data ?: StyleData())
+        return try {
+            val response = styleService.getStyles()
+
+            if (response.isSuccessful) {
+                val data = response.body()?.data
+                if (data != null) {
+                    Result.success(data)
+                } else {
+                    Log.d(TAG, "getAllStyles: response body null ${response.raw()}")
+                    Result.failure(AiArtException(ErrorReason.UnknownError))
+                }
+            } else {
+                Log.d(TAG, "getAllStyles: error when getStyles ${response.message()}")
+                Result.failure(AiArtException(ErrorReason.UnknownError))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "getAllStyles error", e)
+            Result.failure(AiArtException(ErrorReason.UnknownError))
+        }
     }
 
     private fun createMultipartBodyAiArt(

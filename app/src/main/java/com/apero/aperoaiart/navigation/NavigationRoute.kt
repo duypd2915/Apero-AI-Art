@@ -1,16 +1,13 @@
 package com.apero.aperoaiart.navigation
 
 import kotlinx.serialization.Serializable
-import kotlin.reflect.KClass
-
-sealed class NavigationItem(val route: KClass<*>) {
-    data object Style : NavigationItem(StyleRoute::class)
-    data object PickPhoto : NavigationItem(PickPhotoRoute::class)
-    data object Result : NavigationItem(ResultRoute::class)
-}
 
 @Serializable
-data object ResultRoute
+data class ResultRoute(val fileUrl: String) {
+    companion object {
+        const val KEY_FILE_URL = "fileUrl" // must match param name
+    }
+}
 
 @Serializable
 data object PickPhotoRoute

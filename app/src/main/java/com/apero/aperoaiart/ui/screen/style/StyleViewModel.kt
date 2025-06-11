@@ -1,22 +1,20 @@
 package com.apero.aperoaiart.ui.screen.style
 
+import android.content.Context
 import android.net.Uri
-import android.util.Log
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.base.BaseViewModel
 import com.apero.aperoaiart.data.StyleModel
 import com.apero.aperoaiart.data.toModel
-import com.apero.aperoaiart.navigation.SaveStateConstants
 import com.duyhellowolrd.ai_art_service.data.AiArtRepository
 import com.duyhellowolrd.ai_art_service.data.params.AiArtParams
+import com.duyhellowolrd.ai_art_service.exception.AiArtException
 import com.duyhellowolrd.ai_art_service.network.consts.ServiceConstants
 import kotlinx.coroutines.launch
 
 class StyleViewModel(
     private val aiArtRepository: AiArtRepository,
-    private val savedStateHandle: SavedStateHandle
 ) : BaseViewModel<StyleUiState>(StyleUiState()) {
 
     init {
@@ -30,11 +28,6 @@ class StyleViewModel(
                     categories =
                         responseApi.fold(
                             onSuccess = { data ->
-                                Log.d("StyleViewModel", "categories: ${data.items.map { it.id }}")
-                                Log.d(
-                                    "StyleViewModel",
-                                    "styles id: ${data.items.flatMap { it.styles.map { it.id } }}"
-                                )
                                 BaseUIState.Success(data.items.map { it.toModel() })
                             },
                             onFailure = { exception ->
@@ -67,7 +60,6 @@ class StyleViewModel(
     }
 
     fun updateSelectedStyle(styleModel: StyleModel) {
-        Log.d("StyleViewModel", "updateSelectedStyle: ${styleModel.id}")
         updateState { state ->
             state.copy(selectedStyle = styleModel)
         }
@@ -75,7 +67,7 @@ class StyleViewModel(
 
     fun isCurrentImageValid() = uiState.value.imageUrl != null
 
-    fun generateImage(onSuccess: () -> Unit) {
+    fun generateImage(context: Context, onSuccess: (resultUrl: String) -> Unit) {
         updateState {
             it.copy(generatingState = BaseUIState.Loading)
         }
@@ -92,16 +84,17 @@ class StyleViewModel(
                 )
             )
             genResult.fold(
-                onSuccess = {
-                    Log.d("StyleViewModel", "generateImage: ok")
-                    savedStateHandle[SaveStateConstants.KEY_IMAGE_URI] = uiState.value.imageUrl
-                    onSuccess()
+                onSuccess = { fileUrl ->
+                    onSuccess(fileUrl)
                 },
-                onFailure = {
-                    Log.e("StyleViewModel", "generateImage: error", it)
+                onFailure = { error ->
+                    val message =
+                        if (error is AiArtException) context.getString(error.errorReason.resMessage) else ServiceConstants.UNKNOWN_ERROR_MESSAGE
+                    updateState {
+                        it.copy(generatingState = BaseUIState.Error(message))
+                    }
                 }
             )
-
         }
     }
 }

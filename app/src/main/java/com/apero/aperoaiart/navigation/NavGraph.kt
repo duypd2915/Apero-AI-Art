@@ -9,7 +9,7 @@ import com.apero.aperoaiart.ui.screen.result.ResultScreen
 import com.apero.aperoaiart.ui.screen.style.StyleScreen
 
 fun NavGraphBuilder.styleScreen(
-    onGenerateSuccess: () -> Unit,
+    onGenerateSuccess: (resultUrl: String) -> Unit,
 ) {
     composable<StyleRoute> {
         StyleScreen(
@@ -39,16 +39,16 @@ fun NavController.navigationToStyle(
     })
 }
 
-fun NavController.navigationToPickPhoto(
-) {
+fun NavController.navigationToPickPhoto() {
     navigate(PickPhotoRoute, navOptions {
         restoreState = false
     })
 }
 
 fun NavController.navigationToResult(
+    resultUrl: String,
 ) {
-    navigate(ResultRoute, navOptions {
+    navigate(ResultRoute(resultUrl), navOptions {
         restoreState = false
     })
 }
