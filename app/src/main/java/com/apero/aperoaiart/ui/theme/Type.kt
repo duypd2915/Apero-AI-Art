@@ -37,4 +37,11 @@ object AppTypography {
         fontWeight = FontWeight.Bold,
         fontSize = 12.sp,
     )
+
+    val DialogLoading = TextStyle(
+        fontFamily = FontFamily(Font(R.font.plus_jakarta_sans)),
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+    )
 }

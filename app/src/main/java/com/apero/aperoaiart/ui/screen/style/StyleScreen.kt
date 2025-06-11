@@ -51,6 +51,7 @@ import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.data.CategoryModel
 import com.apero.aperoaiart.data.StyleModel
 import com.apero.aperoaiart.ui.components.BottomButton
+import com.apero.aperoaiart.ui.components.LoadingFullScreen
 import com.apero.aperoaiart.ui.components.ShimmerBox
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
@@ -82,7 +83,7 @@ fun StyleScreen(
             imageLauncher.launch("image/*")
         } else {
             if (activity == null) return@rememberLauncherForActivityResult
-            if (!permissionUtil.canShowStorageRational(activity)) {
+            if (!permissionUtil.canShowReadStorageRational(activity)) {
                 permissionUtil.openAppSettings(activity)
             }
         }
@@ -99,11 +100,12 @@ fun StyleScreen(
                 })
             },
         uiState = uiState,
+        isReadyToGenerate = viewModel.isReadyToGenerate(),
         onPromptChange = { viewModel.updatePrompt(it) },
         isImageValid = viewModel.isCurrentImageValid(),
         onOpenPickerWithCheckPermission = {
-            if (!permissionUtil.hasStoragePermission()) {
-                cameraPermissionLauncher.launch(permissionUtil.getStoragePermission())
+            if (!permissionUtil.hasReadStoragePermission()) {
+                cameraPermissionLauncher.launch(permissionUtil.getReadStoragePermission())
             } else {
                 imageLauncher.launch("image/*")
             }
@@ -121,6 +123,7 @@ private fun StyleScreenContent(
     modifier: Modifier,
     uiState: StyleUiState,
     isImageValid: Boolean,
+    isReadyToGenerate: Boolean,
     onOpenPickerWithCheckPermission: () -> Unit,
     onPromptChange: (String) -> Unit,
     onCategoryClick: (Int) -> Unit,
@@ -133,19 +136,10 @@ private fun StyleScreenContent(
             .background(AppColor.Background)
             .padding(horizontal = 23.pxToDp())
     ) {
-        if (uiState.generatingState is BaseUIState.Loading) {
-            Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(AppColor.BackgroundLoading)
-            ) {
-                // TODO: wait lottie
-            }
-        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 27.pxToDp(), bottom = 72.pxToDp()), // Leave space for button
+                .padding(top = 27.pxToDp(), bottom = 72.pxToDp()),
             verticalArrangement = Arrangement.spacedBy(27.pxToDp())
         ) {
             PromptInput(
@@ -172,7 +166,7 @@ private fun StyleScreenContent(
                     style = AppTypography.StyleChooseItem
                 )
                 when (val categories = uiState.categories) {
-                    is BaseUIState.Success ->
+                    is BaseUIState.Success -> {
                         CategoryTabLoaded(
                             tabIndex = uiState.tabIndex,
                             categories = categories.data,
@@ -180,7 +174,7 @@ private fun StyleScreenContent(
                             onStyleClick = onStyleClick,
                             selectedStyle = uiState.selectedStyle
                         )
-
+                    }
 
                     is BaseUIState.Loading,
                     is BaseUIState.Error -> {
@@ -193,10 +187,15 @@ private fun StyleScreenContent(
         }
 
         BottomButton(
-            isEnabled = isImageValid,
+            isEnabled = isReadyToGenerate,
             modifier = Modifier
                 .align(Alignment.BottomCenter),
             onClick = { onGenerateClick() }
+        )
+
+        LoadingFullScreen(
+            isVisible = uiState.generatingState.isLoading(),
+            title = R.string.generating_image
         )
     }
 }
@@ -236,7 +235,6 @@ private fun ImagePickerView(
                         .clickable { onOpenPickerWithCheckPermission() }
                 )
             }
-
         } else {
             Column(
                 modifier = Modifier
@@ -421,6 +419,7 @@ fun StyleScreenPreview() {
         modifier = Modifier,
         uiState = StyleUiState(),
         isImageValid = true,
+        isReadyToGenerate = true,
         onOpenPickerWithCheckPermission = { },
         onPromptChange = { },
         onCategoryClick = { },

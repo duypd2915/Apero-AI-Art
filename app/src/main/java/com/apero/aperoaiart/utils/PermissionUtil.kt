@@ -18,13 +18,19 @@ class PermissionUtil(private val context: Context) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun hasStoragePermission(): Boolean {
+    fun hasReadStoragePermission(): Boolean {
         return ContextCompat.checkSelfPermission(
-            context, getStoragePermission()
+            context, getReadStoragePermission()
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun getStoragePermission(): String {
+    fun hasWriteStoragePermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context, Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun getReadStoragePermission(): String {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
         } else {
@@ -32,12 +38,20 @@ class PermissionUtil(private val context: Context) {
         }
     }
 
-    private fun canShowCameraRationale(activity: Activity): Boolean {
+    fun getWriteStoragePermission(): String {
+        return Manifest.permission.WRITE_EXTERNAL_STORAGE
+    }
+
+    fun canShowCameraRationale(activity: Activity): Boolean {
         return activity.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)
     }
 
-    fun canShowStorageRational(activity: Activity): Boolean {
-        return activity.shouldShowRequestPermissionRationale(getStoragePermission())
+    fun canShowReadStorageRational(activity: Activity): Boolean {
+        return activity.shouldShowRequestPermissionRationale(getReadStoragePermission())
+    }
+
+    fun canShowWriteStorageRational(activity: Activity): Boolean {
+        return activity.shouldShowRequestPermissionRationale(getWriteStoragePermission())
     }
 
     fun openAppSettings(activity: Activity) {

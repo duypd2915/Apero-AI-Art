@@ -24,7 +24,6 @@ object FileUtils {
         val originalBitmap = BitmapFactory.decodeStream(inputStream)
         inputStream?.close()
 
-        // Get original dimensions
         val width = originalBitmap.width
         val height = originalBitmap.height
 
@@ -56,7 +55,6 @@ object FileUtils {
         val newWidth = (width * scale).toInt().coerceIn(minDimension, maxDimension)
         val newHeight = (height * scale).toInt().coerceIn(minDimension, maxDimension)
 
-        // Create resized bitmap
         return originalBitmap.scale(newWidth, newHeight)
     }
 
@@ -70,5 +68,9 @@ object FileUtils {
         }
 
         return file
+    }
+
+    fun saveBitmapToStorage(bitmap: Bitmap) {
+
     }
 }

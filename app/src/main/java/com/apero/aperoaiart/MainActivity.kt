@@ -10,7 +10,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.apero.aperoaiart.navigation.StyleRoute
+import com.apero.aperoaiart.navigation.ResultRoute
 import com.apero.aperoaiart.navigation.navigationToResult
 import com.apero.aperoaiart.navigation.navigationToStyle
 import com.apero.aperoaiart.navigation.pickPhotoScreen
@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
                         navController = navHostController,
-                        startDestination = StyleRoute,
+                        startDestination = ResultRoute("https://cdnphoto.dantri.com.vn/IAaADUP9pnFJdmlk3sGMUxgDY8Y=/thumb_w/1155/2021/12/21/bai-sua-pick-me-girl-pick-me-boy-co-phai-mot-xu-huongdocx-1640104226173.png"),
                         modifier = Modifier.padding(innerPadding),
                     ) {
                         styleScreen(

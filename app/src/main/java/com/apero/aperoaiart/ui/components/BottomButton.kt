@@ -1,5 +1,6 @@
 package com.apero.aperoaiart.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,21 +20,22 @@ import com.apero.aperoaiart.ui.theme.pxToDp
 fun BottomButton(
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
+    @StringRes text: Int = R.string.btn_generate_art,
     onClick: () -> Unit
 ) {
     Text(
-        text = stringResource(R.string.btn_generate_art),
+        text = stringResource(text),
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 52.pxToDp())
+            .clickable { onClick() }
             .background(
                 alpha = if (isEnabled) 1f else 0.5f,
                 brush = AppColor.ButtonGradient,
                 shape = RoundedCornerShape(12.pxToDp())
             )
             .padding(vertical = 16.pxToDp())
-            .padding(horizontal = 8.pxToDp())
-            .clickable { onClick() },
+            .padding(horizontal = 8.pxToDp()),
         color = AppColor.TextWhite,
         textAlign = TextAlign.Center,
         style = AppTypography.StyleChooseItem,

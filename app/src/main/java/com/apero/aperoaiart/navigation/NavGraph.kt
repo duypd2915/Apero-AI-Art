@@ -28,7 +28,9 @@ fun NavGraphBuilder.resultScreen(
     onBack: () -> Unit,
 ) {
     composable<ResultRoute> {
-        ResultScreen()
+        ResultScreen(
+            onBack = onBack
+        )
     }
 }
 

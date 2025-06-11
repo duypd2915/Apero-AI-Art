@@ -4,4 +4,7 @@
     <string name="choose_style">Choose your Style</string>
     <string name="enter_prompt">Enter your prompy</string>
     <string name="add_your_photo">Add your photo</string>
+    <string name="btn_download">Download Photo</string>
+    <string name="text_downloading">Downloading...</string>
+    <string name="generating_image">Generating...</string>
 </resources>
