@@ -1,4 +1,7 @@
 package com.apero.aperoaiart.utils
 
+import androidx.lifecycle.SavedStateHandle
 
-private const val requestCode = 100
+inline fun <reified T> SavedStateHandle.requireArg(key: String): T {
+    return this[key] ?: error("Missing argument for key: $key")
+}

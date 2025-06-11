@@ -32,8 +32,8 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                     ) {
                         styleScreen(
-                            onGenerateSuccess = {
-                                navHostController.navigationToResult()
+                            onGenerateSuccess = { fileUrl ->
+                                navHostController.navigationToResult(fileUrl)
                             }
                         )
 

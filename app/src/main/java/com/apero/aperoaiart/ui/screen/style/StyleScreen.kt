@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -63,10 +64,11 @@ fun StyleScreen(
     modifier: Modifier = Modifier,
     permissionUtil: PermissionUtil = koinInject(),
     viewModel: StyleViewModel = koinViewModel(),
-    onGenerateSuccess: () -> Unit
+    onGenerateSuccess: (resultUrl: String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
+    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val imageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -109,9 +111,7 @@ fun StyleScreen(
         onCategoryClick = { viewModel.updateTabIndex(it) },
         onStyleClick = { viewModel.updateSelectedStyle(it) },
         onGenerateClick = {
-            viewModel.generateImage {
-                onGenerateSuccess()
-            }
+            viewModel.generateImage(context = context, onSuccess = onGenerateSuccess)
         }
     )
 }
