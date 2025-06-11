@@ -67,6 +67,8 @@ class StyleViewModel(
 
     fun isCurrentImageValid() = uiState.value.imageUrl != null
 
+    fun isReadyToGenerate() = isCurrentImageValid() && uiState.value.selectedStyle != null
+
     fun generateImage(context: Context, onSuccess: (resultUrl: String) -> Unit) {
         updateState {
             it.copy(generatingState = BaseUIState.Loading)

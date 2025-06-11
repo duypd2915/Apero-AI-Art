@@ -65,6 +65,8 @@ dependencies {
 
     implementation(projects.aiArtService)
 
+    implementation(libs.lottie.compose)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
