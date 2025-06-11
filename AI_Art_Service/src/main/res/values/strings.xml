@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="network_error">No internet connection! Try again later</string>
+    <string name="internal_error">Internal error. Try again later</string>
+    <string name="unknown_error">Unknown error happen</string>
+    <string name="image_type_invalid">Image must be .jpg/.jpeg!</string>
+    <string name="generate_image_error">Error happen when generating image. Try again!</string>
+</resources>
