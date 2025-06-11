@@ -6,8 +6,8 @@ data class AiArtRequest(
     @SerializedName("file")
     val file: String,
 
-    @SerializedName("style")
-    val style: String? = null,
+//    @SerializedName("style")
+//    val style: String? = null,
 
     @SerializedName("styleId")
     val styleId: String? = null,
@@ -41,22 +41,4 @@ data class AiArtRequest(
 
     @SerializedName("fastMode")
     val fastMode: Boolean? = null
-) {
-    companion object {
-        val Default = AiArtRequest(
-            file = "",
-            style = null,
-            styleId = null,
-            positivePrompt = null,
-            negativePrompt = null,
-            imageSize = null,
-            fixHeight = null,
-            fixWidth = null,
-            fixWidthAndHeight = null,
-            useControlnet = null,
-            applyPulid = null,
-            seed = null,
-            fastMode = null
-        )
-    }
-}
+)

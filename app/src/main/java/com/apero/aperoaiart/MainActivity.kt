@@ -8,7 +8,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.apero.aperoaiart.ui.screen.result.ResultScreen
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import com.apero.aperoaiart.navigation.StyleRoute
+import com.apero.aperoaiart.navigation.navigationToResult
+import com.apero.aperoaiart.navigation.navigationToStyle
+import com.apero.aperoaiart.navigation.pickPhotoScreen
+import com.apero.aperoaiart.navigation.resultScreen
+import com.apero.aperoaiart.navigation.styleScreen
 import com.apero.aperoaiart.ui.theme.AperoAiArtTheme
 
 class MainActivity : ComponentActivity() {
@@ -16,15 +23,29 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val navHostController = rememberNavController()
             AperoAiArtTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    StyleScreen(
-//                        modifier = Modifier.padding(innerPadding),
-//                        onGenerateSuccess = { /*TODO*/ }
-//                    )
-                    ResultScreen(
+                    NavHost(
+                        navController = navHostController,
+                        startDestination = StyleRoute,
                         modifier = Modifier.padding(innerPadding),
-                    )
+                    ) {
+                        styleScreen(
+                            onGenerateSuccess = {
+                                navHostController.navigationToResult()
+                            }
+                        )
+
+                        pickPhotoScreen()
+
+                        resultScreen(
+                            onBack = {
+                                navHostController.navigationToStyle()
+                            }
+                        )
+                    }
+
                 }
             }
         }
