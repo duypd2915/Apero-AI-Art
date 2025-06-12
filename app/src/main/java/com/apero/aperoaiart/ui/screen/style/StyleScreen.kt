@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -21,18 +22,22 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,14 +50,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import com.apero.aperoaiart.R
 import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.data.CategoryModel
 import com.apero.aperoaiart.data.StyleModel
+import com.apero.aperoaiart.ui.components.AppSnackBarController
+import com.apero.aperoaiart.ui.components.AppSnackBarHost
 import com.apero.aperoaiart.ui.components.BottomButton
 import com.apero.aperoaiart.ui.components.LoadingFullScreen
 import com.apero.aperoaiart.ui.components.ShimmerBox
+import com.apero.aperoaiart.ui.components.SnackBarType
+import com.apero.aperoaiart.ui.components.rememberAppSnackBarState
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
@@ -76,6 +86,9 @@ fun StyleScreen(
     ) { uri: Uri? ->
         viewModel.updateCurrentImage(uri)
     }
+    val snackBarHostState = rememberAppSnackBarState()
+    val snackBarController =
+        remember { AppSnackBarController(snackBarHostState, viewModel.viewModelScope) }
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -92,18 +105,20 @@ fun StyleScreen(
         focusManager.clearFocus()
     }
 
+    LaunchedEffect(uiState.generatingState) {
+        (uiState.generatingState as? BaseUIState.Error)?.let { errorState ->
+            snackBarController.show(SnackBarType.ERROR_HAPPEN, errorState.message)
+        }
+    }
+
     StyleScreenContent(
-        modifier = modifier
-            .pointerInput(Unit) {
-                if (uiState.generatingState.isLoading()) return@pointerInput
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                })
-            },
+        modifier = modifier,
         uiState = uiState,
+        snackBarHostState = snackBarHostState,
         isReadyToGenerate = viewModel.isReadyToGenerate(),
         onPromptChange = { viewModel.updatePrompt(it) },
         isImageValid = viewModel.isCurrentImageValid(),
+        onPointerClick = { focusManager.clearFocus() },
         onOpenPickerWithCheckPermission = {
             if (!permissionUtil.hasReadStoragePermission()) {
                 cameraPermissionLauncher.launch(permissionUtil.getReadStoragePermission())
@@ -123,6 +138,8 @@ fun StyleScreen(
 private fun StyleScreenContent(
     modifier: Modifier,
     uiState: StyleUiState,
+    snackBarHostState: SnackbarHostState,
+    onPointerClick: () -> Unit,
     isImageValid: Boolean,
     isReadyToGenerate: Boolean,
     onOpenPickerWithCheckPermission: () -> Unit,
@@ -135,11 +152,16 @@ private fun StyleScreenContent(
         modifier = modifier
             .fillMaxSize()
             .background(AppColor.Background)
-            .padding(horizontal = 23.pxToDp())
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    onPointerClick()
+                })
+            }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(horizontal = 23.pxToDp())
                 .padding(top = 27.pxToDp(), bottom = 72.pxToDp()),
             verticalArrangement = Arrangement.spacedBy(27.pxToDp())
         ) {
@@ -190,13 +212,26 @@ private fun StyleScreenContent(
         BottomButton(
             isEnabled = isReadyToGenerate,
             modifier = Modifier
-                .align(Alignment.BottomCenter),
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 23.pxToDp()),
             onClick = { onGenerateClick() }
+        )
+
+        AppSnackBarHost(
+            hostState = snackBarHostState,
+            modifier = modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
         )
 
         LoadingFullScreen(
             isVisible = uiState.generatingState.isLoading(),
-            title = R.string.generating_image
+            title = R.string.generating_image,
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    if (uiState.generatingState.isLoading()) return@pointerInput
+                }
         )
     }
 }
@@ -360,7 +395,7 @@ private fun StyleItem(
     isSelected: Boolean = false,
     onStyleClick: (StyleModel) -> Unit,
 ) {
-    val borderModifier = if (isSelected) {
+    val selectedModifier = if (isSelected) {
         Modifier.border(
             width = 2.pxToDp(),
             color = AppColor.TextBlue,
@@ -371,25 +406,39 @@ private fun StyleItem(
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .padding(end = 11.pxToDp())
-            .clickable { onStyleClick(model) }
-            .clip(RoundedCornerShape(12.pxToDp()))
+        modifier = modifier.padding(end = 11.pxToDp())
     ) {
-        AsyncImage(
-            model = model.image,
-            contentDescription = model.name,
-            contentScale = ContentScale.Crop,
+        Box(
             modifier = Modifier
                 .size(80.pxToDp())
                 .clip(RoundedCornerShape(12.pxToDp()))
-                .then(borderModifier)
-        )
+                .clickable { onStyleClick(model) }
+        ) {
+            AsyncImage(
+                model = model.image,
+                contentDescription = model.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .matchParentSize()
+                    .then(selectedModifier)
+            )
+
+            if (isSelected)
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(AppColor.AppBlue.copy(alpha = 0.3f))
+                )
+        }
         Text(
             text = model.name,
             color = if (isSelected) AppColor.TextBlue else AppColor.TextPrimary,
             style = AppTypography.StyleChooseItem,
-            modifier = Modifier.padding(top = 8.pxToDp())
+            modifier = Modifier
+                .padding(top = 8.pxToDp())
+                .widthIn(max = 80.pxToDp())
+                .basicMarquee(),
+            maxLines = 1,
         )
     }
 }
@@ -425,7 +474,9 @@ fun StyleScreenPreview() {
         onPromptChange = { },
         onCategoryClick = { },
         onStyleClick = { },
-        onGenerateClick = { }
+        onGenerateClick = { },
+        onPointerClick = {},
+        snackBarHostState = rememberAppSnackBarState()
     )
 }
 

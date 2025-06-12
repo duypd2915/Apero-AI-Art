@@ -27,7 +27,7 @@ fun BottomButton(
         text = stringResource(text),
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 52.pxToDp())
+            .padding(bottom = 72.pxToDp())
             .clickable { onClick() }
             .background(
                 alpha = if (isEnabled) 1f else 0.5f,

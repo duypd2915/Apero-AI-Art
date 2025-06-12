@@ -44,4 +44,11 @@ object AppTypography {
         fontSize = 16.sp,
         lineHeight = 24.sp,
     )
+
+    val SnackBarText = TextStyle(
+        fontFamily = FontFamily(Font(R.font.plus_jakarta_sans)),
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 21.sp,
+    )
 }

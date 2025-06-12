@@ -32,12 +32,13 @@ import com.apero.aperoaiart.ui.theme.pxToDp
 @Composable
 fun LoadingFullScreen(
     isVisible: Boolean,
-    @StringRes title: Int
+    @StringRes title: Int,
+    modifier: Modifier = Modifier
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.anim_loading))
     if (isVisible) {
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .background(AppColor.BackgroundLoading.copy(alpha = 0.7f)),
             contentAlignment = Alignment.Center
@@ -45,7 +46,7 @@ fun LoadingFullScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth(0.4f)
-                    .aspectRatio(1.1f)
+                    .aspectRatio(1.0f)
                     .clip(
                         RoundedCornerShape(
                             topStart = 22.pxToDp(),
@@ -68,7 +69,7 @@ fun LoadingFullScreen(
                     text = stringResource(title),
                     style = AppTypography.DialogLoading,
                     color = AppColor.TextPrimary,
-                    modifier = Modifier.padding(bottom = 10.pxToDp())
+                    modifier = Modifier.padding(bottom = 8.pxToDp())
                 )
             }
         }

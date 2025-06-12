@@ -18,8 +18,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,11 +30,16 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import com.apero.aperoaiart.R
 import com.apero.aperoaiart.base.BaseUIState
+import com.apero.aperoaiart.ui.components.AppSnackBarController
+import com.apero.aperoaiart.ui.components.AppSnackBarHost
 import com.apero.aperoaiart.ui.components.BottomButton
 import com.apero.aperoaiart.ui.components.LoadingFullScreen
+import com.apero.aperoaiart.ui.components.SnackBarType
+import com.apero.aperoaiart.ui.components.rememberAppSnackBarState
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.pxToDp
 import com.apero.aperoaiart.utils.PermissionUtil
@@ -47,6 +55,9 @@ fun ResultScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
+    val snackBarHostState = rememberAppSnackBarState()
+    val snackBarController =
+        remember { AppSnackBarController(snackBarHostState, viewModel.viewModelScope) }
     val writeExPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -64,10 +75,20 @@ fun ResultScreen(
         onBack()
     }
 
+    LaunchedEffect(uiState.downloadState) {
+        if (uiState.downloadState.isSuccess()) {
+            snackBarController.show(
+                type = SnackBarType.DOWNLOAD_SUCCESS,
+                message = "Download Success",
+            )
+        }
+    }
+
     ResultScreenContent(
         uiState = uiState,
         modifier = modifier,
         onBack = onBack,
+        snackbarHostState = snackBarHostState,
         onDownloadClick = {
 //            if (!permissionUtil.hasWriteStoragePermission()) {
 //                writeExPermissionLauncher.launch(permissionUtil.getWriteStoragePermission())
@@ -81,10 +102,12 @@ fun ResultScreen(
 @Composable
 private fun ResultScreenContent(
     uiState: ResultUiState,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     onDownloadClick: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -141,6 +164,13 @@ private fun ResultScreenContent(
                     .fillMaxWidth()
             )
         }
+
+        AppSnackBarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+        )
 
         LoadingFullScreen(
             isVisible = uiState.downloadState.isLoading(),
