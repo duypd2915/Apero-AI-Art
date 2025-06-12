@@ -11,5 +11,5 @@ data class StyleUiState(
     val prompt: String = "",
     val imageUrl: Uri? = null,
     val tabIndex: Int = 0,
-    val generatingState: BaseUIState<Unit> = BaseUIState.Idle // todo replace Unit
+    val generatingState: BaseUIState<Unit> = BaseUIState.Idle
 )

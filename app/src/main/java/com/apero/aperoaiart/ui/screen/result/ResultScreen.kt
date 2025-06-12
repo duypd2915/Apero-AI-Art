@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,6 +89,9 @@ private fun ResultScreenContent(
         modifier = modifier
             .fillMaxSize()
             .background(AppColor.Background)
+            .pointerInput(Unit) {
+                if (uiState.downloadState.isLoading()) return@pointerInput
+            }
     ) {
         Row(
             modifier = Modifier
@@ -130,7 +134,7 @@ private fun ResultScreenContent(
             }
             Spacer(modifier = Modifier.weight(1f))
             BottomButton(
-                isEnabled = uiState.downloadState !is BaseUIState.Loading,
+                isEnabled = !uiState.downloadState.isLoading(),
                 text = R.string.btn_download,
                 onClick = onDownloadClick,
                 modifier = Modifier
@@ -139,7 +143,7 @@ private fun ResultScreenContent(
         }
 
         LoadingFullScreen(
-            isVisible = uiState.downloadState is BaseUIState.Loading,
+            isVisible = uiState.downloadState.isLoading(),
             title = R.string.text_downloading
         )
     }
