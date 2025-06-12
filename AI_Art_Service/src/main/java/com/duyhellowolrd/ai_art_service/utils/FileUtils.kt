@@ -4,9 +4,17 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Environment
 import androidx.core.graphics.scale
+import com.duyhellowolrd.ai_art_service.exception.AiArtException
+import com.duyhellowolrd.ai_art_service.exception.ErrorReason
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
 
 object FileUtils {
     fun checkImageExtension(context: Context, uri: Uri): Boolean {
@@ -70,7 +78,41 @@ object FileUtils {
         return file
     }
 
-    fun saveBitmapToStorage(bitmap: Bitmap) {
+    suspend fun saveFileToStorage(fileUrl: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = URL(fileUrl)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.connect()
 
+                if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                    return@withContext Result.failure(AiArtException(ErrorReason.UnknownError))
+                }
+
+                val inputStream: InputStream = connection.inputStream
+                val downloadsDir =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadsDir.exists()) downloadsDir.mkdirs()
+
+                val file =
+                    File(downloadsDir, "image_apero_ai_art_${System.currentTimeMillis()}.jpg")
+
+                val outputStream = FileOutputStream(file)
+                val buffer = ByteArray(4096)
+                var bytesRead: Int
+
+                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    outputStream.write(buffer, 0, bytesRead)
+                }
+
+                outputStream.flush()
+                outputStream.close()
+                inputStream.close()
+                return@withContext Result.success(Unit)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return@withContext Result.failure(e)
+            }
+        }
     }
 }

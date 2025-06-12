@@ -95,6 +95,7 @@ fun StyleScreen(
     StyleScreenContent(
         modifier = modifier
             .pointerInput(Unit) {
+                if (uiState.generatingState.isLoading()) return@pointerInput
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
                 })

@@ -4,5 +4,5 @@ import com.apero.aperoaiart.base.BaseUIState
 
 data class ResultUiState(
     val imageUrl: String = "",
-    val downloadState: BaseUIState<String> = BaseUIState.Idle
+    val downloadState: BaseUIState<Unit> = BaseUIState.Idle
 )
