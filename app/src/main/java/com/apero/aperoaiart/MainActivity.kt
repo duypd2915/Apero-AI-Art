@@ -6,46 +6,49 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.apero.aperoaiart.navigation.ResultRoute
+import com.apero.aperoaiart.navigation.StyleRoute
 import com.apero.aperoaiart.navigation.navigationToResult
 import com.apero.aperoaiart.navigation.navigationToStyle
 import com.apero.aperoaiart.navigation.pickPhotoScreen
 import com.apero.aperoaiart.navigation.resultScreen
 import com.apero.aperoaiart.navigation.styleScreen
 import com.apero.aperoaiart.ui.theme.AperoAiArtTheme
+import com.apero.aperoaiart.ui.theme.pxToDp
+import com.apero.aperoaiart.utils.hideNavigationBar
+import com.apero.aperoaiart.utils.transparentStatusBar
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        hideNavigationBar()
+        transparentStatusBar()
         setContent {
             val navHostController = rememberNavController()
             AperoAiArtTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    NavHost(
-                        navController = navHostController,
-                        startDestination = ResultRoute("https://cdnphoto.dantri.com.vn/IAaADUP9pnFJdmlk3sGMUxgDY8Y=/thumb_w/1155/2021/12/21/bai-sua-pick-me-girl-pick-me-boy-co-phai-mot-xu-huongdocx-1640104226173.png"),
-                        modifier = Modifier.padding(innerPadding),
-                    ) {
-                        styleScreen(
-                            onGenerateSuccess = { fileUrl ->
-                                navHostController.navigationToResult(fileUrl)
-                            }
-                        )
+                NavHost(
+                    navController = navHostController,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 23.pxToDp()),
+                    startDestination = StyleRoute,
+                ) {
+                    styleScreen(
+                        onGenerateSuccess = { fileUrl ->
+                            navHostController.navigationToResult(fileUrl)
+                        }
+                    )
 
-                        pickPhotoScreen()
+                    pickPhotoScreen()
 
-                        resultScreen(
-                            onBack = {
-                                navHostController.navigationToStyle()
-                            }
-                        )
-                    }
-
+                    resultScreen(
+                        onBack = {
+                            navHostController.navigationToStyle()
+                        }
+                    )
                 }
             }
         }

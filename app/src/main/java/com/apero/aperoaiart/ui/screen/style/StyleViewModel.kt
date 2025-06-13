@@ -7,6 +7,7 @@ import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.base.BaseViewModel
 import com.apero.aperoaiart.data.StyleModel
 import com.apero.aperoaiart.data.toModel
+import com.apero.aperoaiart.utils.isNotNullOrEmpty
 import com.duyhellowolrd.ai_art_service.data.AiArtRepository
 import com.duyhellowolrd.ai_art_service.data.params.AiArtParams
 import com.duyhellowolrd.ai_art_service.exception.AiArtException
@@ -65,7 +66,7 @@ class StyleViewModel(
         }
     }
 
-    fun isCurrentImageValid() = uiState.value.imageUrl != null
+    fun isCurrentImageValid() = uiState.value.imageUrl.isNotNullOrEmpty()
 
     fun isReadyToGenerate() = isCurrentImageValid() && uiState.value.selectedStyle != null
 
@@ -75,11 +76,22 @@ class StyleViewModel(
         }
         viewModelScope.launch {
             val uiStateValue = uiState.value
-            if (uiStateValue.imageUrl == null) return@launch
+            if (uiStateValue.imageUrl == null) {
+                updateState {
+                    it.copy(generatingState = BaseUIState.Error("Image is required"))
+                }
+                return@launch
+            }
+            if (uiStateValue.selectedStyle == null) {
+                updateState {
+                    it.copy(generatingState = BaseUIState.Error("Style is required"))
+                }
+                return@launch
+            }
             val genResult = aiArtRepository.genArtAi(
                 params = AiArtParams(
                     prompt = uiStateValue.prompt,
-                    styleId = uiStateValue.selectedStyle?.id ?: "",
+                    styleId = uiStateValue.selectedStyle.id,
                     positivePrompt = uiStateValue.prompt,
                     negativePrompt = uiStateValue.prompt,
                     imageUri = uiStateValue.imageUrl

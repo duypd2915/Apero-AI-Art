@@ -7,4 +7,7 @@ sealed class BaseUIState<out T> {
     data object Idle : BaseUIState<Nothing>()
 
     fun isLoading() = this is Loading
+    fun isSuccess() = this is Success
+    fun isError() = this is Error
+    fun isIdle() = this is Idle
 }
