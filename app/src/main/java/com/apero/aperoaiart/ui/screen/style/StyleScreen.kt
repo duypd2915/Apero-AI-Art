@@ -75,17 +75,13 @@ fun StyleScreen(
     modifier: Modifier = Modifier,
     permissionUtil: PermissionUtil = koinInject(),
     viewModel: StyleViewModel = koinViewModel(),
-    onGenerateSuccess: (resultUrl: String) -> Unit
+    onGenerateSuccess: (resultUrl: String) -> Unit,
+    onOpenPickPhoto: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-    val imageLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        viewModel.updateCurrentImage(uri)
-    }
     val snackBarHostState = rememberAppSnackBarState()
     val snackBarController =
         remember { AppSnackBarController(snackBarHostState, viewModel.viewModelScope) }
@@ -93,7 +89,7 @@ fun StyleScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            imageLauncher.launch("image/*")
+            onOpenPickPhoto()
         } else {
             if (activity == null) return@rememberLauncherForActivityResult
             if (!permissionUtil.canShowReadStorageRational(activity)) {
@@ -103,6 +99,10 @@ fun StyleScreen(
     }
     BackHandler {
         focusManager.clearFocus()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadUriFromNavigation()
     }
 
     LaunchedEffect(uiState.generatingState) {
@@ -123,7 +123,7 @@ fun StyleScreen(
             if (!permissionUtil.hasReadStoragePermission()) {
                 cameraPermissionLauncher.launch(permissionUtil.getReadStoragePermission())
             } else {
-                imageLauncher.launch("image/*")
+                onOpenPickPhoto()
             }
         },
         onCategoryClick = { viewModel.updateTabIndex(it) },

@@ -66,6 +66,7 @@ dependencies {
     implementation(projects.aiArtService)
 
     implementation(libs.lottie.compose)
+    implementation(libs.androidx.paging.compose.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

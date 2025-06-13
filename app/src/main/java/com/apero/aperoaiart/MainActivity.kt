@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.apero.aperoaiart.navigation.StyleRoute
+import com.apero.aperoaiart.navigation.navigationToPickPhoto
 import com.apero.aperoaiart.navigation.navigationToResult
 import com.apero.aperoaiart.navigation.navigationToStyle
 import com.apero.aperoaiart.navigation.pickPhotoScreen
@@ -34,15 +35,25 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(top = 23.pxToDp()),
-                    startDestination = StyleRoute,
+                    startDestination = StyleRoute(),
                 ) {
                     styleScreen(
                         onGenerateSuccess = { fileUrl ->
                             navHostController.navigationToResult(fileUrl)
+                        },
+                        onOpenPickPhoto = {
+                            navHostController.navigationToPickPhoto()
                         }
                     )
 
-                    pickPhotoScreen()
+                    pickPhotoScreen(
+                        onBack = {
+                            navHostController.popBackStack()
+                        },
+                        onNext = { selectedUri ->
+                            navHostController.navigationToStyle(fileUrl = selectedUri)
+                        }
+                    )
 
                     resultScreen(
                         onBack = {

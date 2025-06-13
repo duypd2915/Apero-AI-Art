@@ -1,12 +1,15 @@
 package com.apero.aperoaiart.ui.screen.style
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.base.BaseViewModel
 import com.apero.aperoaiart.data.StyleModel
 import com.apero.aperoaiart.data.toModel
+import com.apero.aperoaiart.navigation.StyleRoute
+import com.apero.aperoaiart.utils.getArgOrNull
 import com.apero.aperoaiart.utils.isNotNullOrEmpty
 import com.duyhellowolrd.ai_art_service.data.AiArtRepository
 import com.duyhellowolrd.ai_art_service.data.params.AiArtParams
@@ -16,6 +19,7 @@ import kotlinx.coroutines.launch
 
 class StyleViewModel(
     private val aiArtRepository: AiArtRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : BaseViewModel<StyleUiState>(StyleUiState()) {
 
     init {
@@ -42,9 +46,11 @@ class StyleViewModel(
         }
     }
 
-    fun updateCurrentImage(newUri: Uri?) {
+    fun loadUriFromNavigation() {
         updateState { state ->
-            state.copy(imageUrl = newUri)
+            state.copy(
+                imageUrl = savedStateHandle.getArgOrNull<String>(StyleRoute.KEY_FILE_URL)?.toUri()
+            )
         }
     }
 
