@@ -7,7 +7,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,7 +32,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import com.apero.aperoaiart.R
-import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.ui.components.AppSnackBarController
 import com.apero.aperoaiart.ui.components.AppSnackBarHost
 import com.apero.aperoaiart.ui.components.BottomButton
@@ -43,6 +41,7 @@ import com.apero.aperoaiart.ui.components.rememberAppSnackBarState
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.pxToDp
 import com.apero.aperoaiart.utils.PermissionUtil
+import com.apero.aperoaiart.utils.singleClickable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -127,7 +126,7 @@ private fun ResultScreenContent(
                 contentDescription = "Back",
                 modifier = Modifier
                     .size(40.pxToDp())
-                    .clickable(enabled = uiState.downloadState !is BaseUIState.Loading) { onBack() }
+                    .singleClickable { onBack() }
             )
         }
         Column(

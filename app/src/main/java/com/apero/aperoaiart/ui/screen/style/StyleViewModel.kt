@@ -68,7 +68,16 @@ class StyleViewModel(
 
     fun updateSelectedStyle(styleModel: StyleModel) {
         updateState { state ->
-            state.copy(selectedStyle = styleModel)
+            state.copy(
+                selectedStyle = styleModel,
+                prompt = buildString {
+                    if (state.prompt.isNotBlank()) {
+                        append(state.prompt)
+                        append(", ")
+                    }
+                    append(styleModel.positivePrompt)
+                }
+            )
         }
     }
 

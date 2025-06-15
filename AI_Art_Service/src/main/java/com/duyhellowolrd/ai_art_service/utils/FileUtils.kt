@@ -1,10 +1,17 @@
 package com.duyhellowolrd.ai_art_service.utils
 
+import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
+import android.util.LruCache
+import android.util.Size
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.scale
 import com.duyhellowolrd.ai_art_service.exception.AiArtException
 import com.duyhellowolrd.ai_art_service.exception.ErrorReason
@@ -20,6 +27,38 @@ object FileUtils {
     fun checkImageExtension(context: Context, uri: Uri): Boolean {
         val mimeType = context.contentResolver.getType(uri)
         return mimeType in listOf("image/jpeg", "image/jpg")
+    }
+
+    private val cache = object : LruCache<Long, ImageBitmap>(200) {
+        override fun sizeOf(key: Long, value: ImageBitmap): Int = 1
+    }
+
+    suspend fun loadThumbnail(
+        context: Context,
+        id: Long,
+        sizePx: Int
+    ): ImageBitmap? {
+        cache[id]?.let { return it }
+
+        // 2. load thumbnail từ MediaStore
+        val uri = ContentUris.withAppendedId(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id
+        )
+        val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            context.contentResolver.loadThumbnail(uri, Size(sizePx, sizePx), null)
+        } else {
+            MediaStore.Images.Thumbnails.getThumbnail(
+                context.contentResolver,
+                id,
+                MediaStore.Images.Thumbnails.MINI_KIND,
+                null
+            )
+        } ?: return null
+
+        // 3. convert + cache
+        val img = bitmap.asImageBitmap()
+        cache.put(id, img)
+        return img
     }
 
     fun uriToResizedBitmap(

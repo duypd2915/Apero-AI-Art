@@ -67,6 +67,4 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.api.signature)
 
-    implementation(libs.androidx.paging.compose.android)
-    implementation(libs.androidx.paging.runtime)
 }

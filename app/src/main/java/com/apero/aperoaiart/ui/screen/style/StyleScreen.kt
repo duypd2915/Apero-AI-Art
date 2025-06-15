@@ -9,7 +9,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +25,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ScrollableTabRow
@@ -58,6 +58,7 @@ import com.apero.aperoaiart.data.CategoryModel
 import com.apero.aperoaiart.data.StyleModel
 import com.apero.aperoaiart.ui.components.AppSnackBarController
 import com.apero.aperoaiart.ui.components.AppSnackBarHost
+import com.apero.aperoaiart.ui.components.AsyncImageWithShimmer
 import com.apero.aperoaiart.ui.components.BottomButton
 import com.apero.aperoaiart.ui.components.LoadingFullScreen
 import com.apero.aperoaiart.ui.components.ShimmerBox
@@ -67,6 +68,7 @@ import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
 import com.apero.aperoaiart.utils.PermissionUtil
+import com.apero.aperoaiart.utils.singleClickable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -127,7 +129,10 @@ fun StyleScreen(
             }
         },
         onCategoryClick = { viewModel.updateTabIndex(it) },
-        onStyleClick = { viewModel.updateSelectedStyle(it) },
+        onStyleClick = {
+            focusManager.clearFocus()
+            viewModel.updateSelectedStyle(it)
+        },
         onGenerateClick = {
             viewModel.generateImage(context = context, onSuccess = onGenerateSuccess)
         }
@@ -268,14 +273,16 @@ private fun ImagePickerView(
                     alignment = Alignment.TopStart,
                     modifier = Modifier
                         .padding(top = 18.pxToDp(), start = 23.pxToDp())
-                        .clickable { onOpenPickerWithCheckPermission() }
+                        .singleClickable { onOpenPickerWithCheckPermission() }
                 )
             }
         } else {
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .clickable { onOpenPickerWithCheckPermission() },
+                    .clip(RoundedCornerShape(12.pxToDp()))
+                    .singleClickable { onOpenPickerWithCheckPermission() }
+                    .padding(20.pxToDp()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.pxToDp())
             ) {
@@ -322,10 +329,16 @@ private fun PromptInput(
             unfocusedContainerColor = AppColor.Background,
             focusedContainerColor = AppColor.Background,
             disabledContainerColor = AppColor.Background,
-            cursorColor = AppColor.Primary,
+            cursorColor = AppColor.TextPrimary,
             focusedIndicatorColor = AppColor.Transparent,
-            unfocusedIndicatorColor = AppColor.Transparent
-        )
+            unfocusedIndicatorColor = AppColor.Transparent,
+            focusedTextColor = AppColor.TextPrimary,
+            unfocusedTextColor = AppColor.TextPrimary,
+            errorCursorColor = AppColor.TextPrimary,
+            focusedLabelColor = AppColor.TextSecondary,
+            unfocusedLabelColor = AppColor.TextSecondary,
+
+            )
     )
 }
 
@@ -338,6 +351,12 @@ private fun CategoryTabLoaded(
     onCategoryClick: (Int) -> Unit,
     onStyleClick: (StyleModel) -> Unit
 ) {
+
+    val lazyListState = rememberLazyListState()
+
+    LaunchedEffect(tabIndex) {
+        lazyListState.scrollToItem(0)
+    }
     ScrollableTabRow(
         modifier = modifier.fillMaxWidth(),
         selectedTabIndex = tabIndex,
@@ -377,7 +396,10 @@ private fun CategoryTabLoaded(
         }
     }
 
-    LazyRow {
+    LazyRow(
+        state = lazyListState,
+        horizontalArrangement = Arrangement.spacedBy(12.pxToDp()),
+    ) {
         items(categories[tabIndex].styles) { style ->
             StyleItem(
                 model = style,
@@ -406,15 +428,15 @@ private fun StyleItem(
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(end = 11.pxToDp())
+        modifier = modifier
     ) {
         Box(
             modifier = Modifier
                 .size(80.pxToDp())
                 .clip(RoundedCornerShape(12.pxToDp()))
-                .clickable { onStyleClick(model) }
+                .singleClickable { onStyleClick(model) }
         ) {
-            AsyncImage(
+            AsyncImageWithShimmer(
                 model = model.image,
                 contentDescription = model.name,
                 contentScale = ContentScale.Crop,

@@ -3,7 +3,6 @@ package com.apero.aperoaiart.ui.screen.pickphoto
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,27 +18,29 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
-import coil.compose.AsyncImage
-import coil.request.CachePolicy
-import coil.request.ImageRequest
 import com.apero.aperoaiart.R
+import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
-import com.duyhellowolrd.ai_art_service.data.PhotoItem
+import com.apero.aperoaiart.utils.singleClickable
+import com.duyhellowolrd.ai_art_service.utils.FileUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -49,12 +50,15 @@ fun PickPhotoScreen(
     onBack: () -> Unit,
     onNext: (selectedUri: String) -> Unit
 ) {
-    val selectedPhoto by viewModel.selectedPhoto.collectAsStateWithLifecycle()
     val configuration = LocalConfiguration.current
+    val context = LocalContext.current
     val imageSizePx =
         remember(configuration.screenWidthDp) { (configuration.screenWidthDp - 60) / 3 }
-    val lazyPagingItems: LazyPagingItems<PhotoItem> =
-        viewModel.photoPagingFlow.collectAsLazyPagingItems()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val photos = when (val state = uiState.photoState) {
+        is BaseUIState.Success -> state.data
+        else -> emptyList()
+    }
 
     Column(
         modifier = modifier
@@ -74,7 +78,7 @@ fun PickPhotoScreen(
                 contentDescription = "Close",
                 modifier = Modifier
                     .size(40.pxToDp())
-                    .clickable { onBack() }
+                    .singleClickable { onBack() }
                     .padding(start = 16.pxToDp())
             )
             Spacer(modifier = Modifier.weight(1f))
@@ -83,8 +87,8 @@ fun PickPhotoScreen(
                 style = AppTypography.NextPickPhoto,
                 color = AppColor.TextPrimary,
                 modifier = Modifier
-                    .clickable(enabled = selectedPhoto != null) {
-                        onNext(selectedPhoto?.uri.toString())
+                    .singleClickable(enabled = uiState.selectedPhoto != null) {
+                        onNext(uiState.selectedPhoto?.uri.toString())
                     }
                     .padding(end = 16.pxToDp())
             )
@@ -96,9 +100,16 @@ fun PickPhotoScreen(
                 .padding(top = 10.pxToDp()),
             contentPadding = PaddingValues(horizontal = 10.pxToDp(), vertical = 6.pxToDp())
         ) {
-            items(lazyPagingItems.itemCount) { index ->
-                val item = lazyPagingItems[index]
-                val isSelected = item?.id == selectedPhoto?.id
+            items(photos.size) { index ->
+                val item = photos[index]
+                val isSelected = item.id == uiState.selectedPhoto?.id
+                val thumbnail by produceState<ImageBitmap?>(initialValue = null, item.id) {
+                    withContext(Dispatchers.IO) {
+                        value = FileUtils.loadThumbnail(
+                            context, item.id, imageSizePx
+                        )
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .padding(5.pxToDp())
@@ -106,19 +117,26 @@ fun PickPhotoScreen(
                         .clip(RoundedCornerShape(8.pxToDp()))
                         .border(
                             width = 1.pxToDp(),
-                            color = AppColor.Transparent,
+                            color = if (isSelected) AppColor.Primary else AppColor.Transparent,
                             shape = RoundedCornerShape(8.pxToDp())
                         )
-                        .clickable { viewModel.selectPhoto(item) }
+                        .singleClickable { viewModel.selectPhoto(item) }
                 ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(item?.uri)
-                            .size(imageSizePx)
-                            .crossfade(true)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .memoryCachePolicy(CachePolicy.ENABLED)
-                            .build(),
+//                    AsyncImage(
+//                        model = ImageRequest.Builder(LocalContext.current)
+//                            .data(item.uri)
+//                            .size(imageSizePx)
+//                            .crossfade(false)
+//                            .diskCachePolicy(CachePolicy.DISABLED)
+//                            .memoryCachePolicy(CachePolicy.ENABLED)
+//                            .build(),
+//                        contentDescription = null,
+//                        contentScale = ContentScale.Crop,
+//                        modifier = Modifier.fillMaxSize()
+//                    )
+
+                    Image(
+                        bitmap = thumbnail!!,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -140,6 +158,13 @@ fun PickPhotoScreen(
                                 modifier = Modifier.align(Alignment.Center)
                             )
                         }
+                    }
+                }
+
+                // Load thêm khi gần cuối
+                if (index >= photos.size - 6) {
+                    LaunchedEffect(Unit) {
+                        viewModel.loadNextPage()
                     }
                 }
             }

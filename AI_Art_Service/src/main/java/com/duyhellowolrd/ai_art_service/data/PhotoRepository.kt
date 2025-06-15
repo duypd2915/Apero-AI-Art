@@ -4,72 +4,54 @@ import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import androidx.paging.PagingSource
-import androidx.paging.PagingState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 data class PhotoItem(val id: Long, val uri: Uri)
 
-/**
- * Repository to load all photo URIs from device storage using ContentResolver.
- * @param context Application context
- */
 class PhotoRepository(private val context: Context) {
 
-    fun getPhotoPagingSource(): PagingSource<Int, PhotoItem> =
-        object : PagingSource<Int, PhotoItem>() {
-            private var allIds: List<Long>? = null
+    private val pageSize = 100
+    private var currentOffset = 0
+    private var isLastPage = false
 
-            override suspend fun load(params: LoadParams<Int>): LoadResult<Int, PhotoItem> {
-                val page = params.key ?: 0
-                val pageSize = params.loadSize
+    fun reset() {
+        currentOffset = 0
+        isLastPage = false
+    }
 
-                // Lấy toàn bộ ID nếu chưa có
-                if (allIds == null) {
-                    val ids = mutableListOf<Long>()
-                    val projection = arrayOf(MediaStore.Images.Media._ID)
-                    val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
-                    val query = context.contentResolver.query(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        projection,
-                        null,
-                        null,
-                        sortOrder
-                    )
-                    query?.use { cursor ->
-                        val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                        while (cursor.moveToNext()) {
-                            ids.add(cursor.getLong(idColumn))
-                        }
-                    }
-                    allIds = ids
-                }
+    /**
+     * Returns a flow that emits one page (100 items) each time it's collected.
+     */
+    fun loadNextPage(): Flow<List<PhotoItem>> = flow {
+        if (isLastPage) {
+            emit(emptyList())
+            return@flow
+        }
 
-                val ids = allIds ?: emptyList()
-                val fromIndex = page * pageSize
-                val toIndex = minOf(fromIndex + pageSize, ids.size)
-                if (fromIndex >= ids.size) {
-                    return LoadResult.Page(emptyList(), prevKey = null, nextKey = null)
-                }
-                val pageIds = ids.subList(fromIndex, toIndex)
-                val photoItems = pageIds.map { id ->
-                    val contentUri =
-                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                    PhotoItem(id, contentUri)
-                }
-                val nextKey = if (toIndex < ids.size) page + 1 else null
-                val prevKey = if (page > 0) page - 1 else null
-                return LoadResult.Page(
-                    data = photoItems,
-                    prevKey = prevKey,
-                    nextKey = nextKey
-                )
-            }
+        val projection = arrayOf(MediaStore.Images.Media._ID)
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        val queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI.buildUpon()
+            .appendQueryParameter("limit", "$currentOffset, $pageSize")
+            .build()
+        val items = mutableListOf<PhotoItem>()
 
-            override fun getRefreshKey(state: PagingState<Int, PhotoItem>): Int? {
-                return state.anchorPosition?.let { anchorPosition ->
-                    val anchorPage = state.closestPageToPosition(anchorPosition)
-                    anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)
-                }
+        context.contentResolver.query(
+            queryUri, projection, null, null, sortOrder
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val uri =
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                items.add(PhotoItem(id, uri))
             }
         }
-} 
+
+        if (items.size < pageSize) isLastPage = true else currentOffset += pageSize
+
+        emit(items)
+    }.flowOn(Dispatchers.IO)
+}
