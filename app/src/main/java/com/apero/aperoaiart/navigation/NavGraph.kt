@@ -1,26 +1,34 @@
 package com.apero.aperoaiart.navigation
 
-import androidx.compose.material3.Text
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navOptions
+import com.apero.aperoaiart.ui.screen.pickphoto.PickPhotoScreen
 import com.apero.aperoaiart.ui.screen.result.ResultScreen
 import com.apero.aperoaiart.ui.screen.style.StyleScreen
 
 fun NavGraphBuilder.styleScreen(
     onGenerateSuccess: (resultUrl: String) -> Unit,
+    onOpenPickPhoto: () -> Unit
 ) {
     composable<StyleRoute> {
         StyleScreen(
             onGenerateSuccess = onGenerateSuccess,
+            onOpenPickPhoto = onOpenPickPhoto
         )
     }
 }
 
-fun NavGraphBuilder.pickPhotoScreen() {
+fun NavGraphBuilder.pickPhotoScreen(
+    onBack: () -> Unit,
+    onNext: (selectedUri: String) -> Unit
+) {
     composable<PickPhotoRoute> {
-        Text("Pick Photo Screen")
+        PickPhotoScreen(
+            onBack = onBack,
+            onNext = onNext
+        )
     }
 }
 
@@ -35,8 +43,9 @@ fun NavGraphBuilder.resultScreen(
 }
 
 fun NavController.navigationToStyle(
+    fileUrl: String? = null,
 ) {
-    navigate(StyleRoute, navOptions {
+    navigate(StyleRoute(fileUrl), navOptions {
         restoreState = true
     })
 }

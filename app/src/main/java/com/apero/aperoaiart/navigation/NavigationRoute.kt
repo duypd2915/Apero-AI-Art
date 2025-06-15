@@ -13,4 +13,8 @@ data class ResultRoute(val fileUrl: String) {
 data object PickPhotoRoute
 
 @Serializable
-data object StyleRoute
+data class StyleRoute(val fileUrl: String? = null) {
+    companion object {
+        const val KEY_FILE_URL = "fileUrl" // must match param name
+    }
+}

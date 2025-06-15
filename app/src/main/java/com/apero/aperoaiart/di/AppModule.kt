@@ -1,5 +1,6 @@
 package com.apero.aperoaiart.di
 
+import com.apero.aperoaiart.ui.screen.pickphoto.PickPhotoViewModel
 import com.apero.aperoaiart.ui.screen.result.ResultViewModel
 import com.apero.aperoaiart.ui.screen.style.StyleViewModel
 import com.apero.aperoaiart.utils.PermissionUtil
@@ -25,6 +26,7 @@ val repositoryModule = module {
 val viewModelModule = module {
     viewModelOf(::StyleViewModel)
     viewModelOf(::ResultViewModel)
+    viewModelOf(::PickPhotoViewModel)
 }
 
 val permissionModule = module {

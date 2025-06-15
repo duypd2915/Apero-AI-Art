@@ -1,6 +1,7 @@
 package com.duyhellowolrd.ai_art_service.di
 
 import com.duyhellowolrd.ai_art_service.data.AiArtRepository
+import com.duyhellowolrd.ai_art_service.data.PhotoRepository
 import com.duyhellowolrd.ai_art_service.data.impl.AiArtRepositoryImpl
 import com.duyhellowolrd.ai_art_service.network.ApiClient
 import com.duyhellowolrd.ai_art_service.network.service.AIStyleService
@@ -17,6 +18,7 @@ internal val serviceModule = module {
 
 internal val repositoryModule = module {
     single<AiArtRepository> { AiArtRepositoryImpl(androidContext(), get(), get(), get()) }
+    single { PhotoRepository(androidContext()) }
 }
 
 val aiServiceModule = listOf(

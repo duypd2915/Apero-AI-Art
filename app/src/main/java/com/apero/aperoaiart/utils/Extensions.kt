@@ -12,8 +12,12 @@ inline fun <reified T> SavedStateHandle.requireArg(key: String): T {
     return this[key] ?: error("Missing argument for key: $key")
 }
 
+inline fun <reified T> SavedStateHandle.getArgOrNull(key: String): T? {
+    return this[key]
+}
+
 fun Uri?.isNotNullOrEmpty(): Boolean {
-    return this != null || this != Uri.EMPTY
+    return this != null && this != Uri.EMPTY
 }
 
 fun Activity.hideNavigationBar() {
