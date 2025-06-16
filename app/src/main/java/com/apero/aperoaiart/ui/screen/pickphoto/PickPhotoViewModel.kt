@@ -1,11 +1,12 @@
 package com.apero.aperoaiart.ui.screen.pickphoto
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.base.BaseViewModel
 import com.duyhellowolrd.ai_art_service.data.PhotoItem
 import com.duyhellowolrd.ai_art_service.data.PhotoRepository
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class PickPhotoViewModel(
@@ -13,6 +14,7 @@ class PickPhotoViewModel(
 ) : BaseViewModel<PickPhotoUiState>(PickPhotoUiState()) {
 
     private var isLoading = false
+    private var jobLoadPhoto: Job? = null
 
     init {
         loadNextPage()
@@ -24,38 +26,27 @@ class PickPhotoViewModel(
 
         updateState { it.copy(photoState = BaseUIState.Loading) }
 
-        viewModelScope.launch {
+        jobLoadPhoto = viewModelScope.launch {
             try {
-                repo.loadNextPage().collect { newPage ->
-                    val currentList =
-                        (uiState.value.photoState as? BaseUIState.Success)?.data.orEmpty()
-                    val combined = currentList + newPage
+                repo.loadNextPage()
+                    .collect { newPage ->
+                        val currentList =
+                            (uiState.value.photoState as? BaseUIState.Success)?.data.orEmpty()
+                        Log.d("PickPhotoViewModel", "loadNextPage: $currentList")
+                        val combined = currentList + newPage
 
-                    updateState {
-                        it.copy(photoState = BaseUIState.Success(combined))
+                        updateState {
+                            it.copy(photoState = BaseUIState.Success(combined))
+                        }
+                        isLoading = false
                     }
-                    isLoading = false
-                }
             } catch (e: Exception) {
+                Log.e("PickPhotoViewModel", "loadNextPage: ", e)
                 updateState {
                     it.copy(photoState = BaseUIState.Error(e.message ?: "Unknown error"))
                 }
                 isLoading = false
             }
-        }
-    }
-
-    fun resetAndReload() {
-        repo.reset()
-        updateState {
-            it.copy(
-                photoState = BaseUIState.Idle,
-                selectedPhoto = null
-            )
-        }
-        viewModelScope.launch {
-            delay(100)
-            loadNextPage()
         }
     }
 

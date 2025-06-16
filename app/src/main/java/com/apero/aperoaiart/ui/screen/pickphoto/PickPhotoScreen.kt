@@ -20,16 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.apero.aperoaiart.R
@@ -37,10 +32,8 @@ import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
+import com.apero.aperoaiart.utils.UiConstant
 import com.apero.aperoaiart.utils.singleClickable
-import com.duyhellowolrd.ai_art_service.utils.FileUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -50,10 +43,7 @@ fun PickPhotoScreen(
     onBack: () -> Unit,
     onNext: (selectedUri: String) -> Unit
 ) {
-    val configuration = LocalConfiguration.current
-    val context = LocalContext.current
-    val imageSizePx =
-        remember(configuration.screenWidthDp) { (configuration.screenWidthDp - 60) / 3 }
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val photos = when (val state = uiState.photoState) {
         is BaseUIState.Success -> state.data
@@ -87,8 +77,8 @@ fun PickPhotoScreen(
                 style = AppTypography.NextPickPhoto,
                 color = AppColor.TextPrimary,
                 modifier = Modifier
-                    .singleClickable(enabled = uiState.selectedPhoto != null) {
-                        onNext(uiState.selectedPhoto?.uri.toString())
+                    .singleClickable {
+                        uiState.selectedPhoto?.url?.let { onNext(it) }
                     }
                     .padding(end = 16.pxToDp())
             )
@@ -103,17 +93,10 @@ fun PickPhotoScreen(
             items(photos.size) { index ->
                 val item = photos[index]
                 val isSelected = item.id == uiState.selectedPhoto?.id
-                val thumbnail by produceState<ImageBitmap?>(initialValue = null, item.id) {
-                    withContext(Dispatchers.IO) {
-                        value = FileUtils.loadThumbnail(
-                            context, item.id, imageSizePx
-                        )
-                    }
-                }
                 Box(
                     modifier = Modifier
                         .padding(5.pxToDp())
-                        .size(imageSizePx.pxToDp())
+                        .size(UiConstant.preferImageSize.pxToDp())
                         .clip(RoundedCornerShape(8.pxToDp()))
                         .border(
                             width = 1.pxToDp(),
@@ -136,7 +119,7 @@ fun PickPhotoScreen(
 //                    )
 
                     Image(
-                        bitmap = thumbnail!!,
+                        bitmap = item.bitmap,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -162,7 +145,7 @@ fun PickPhotoScreen(
                 }
 
                 // Load thêm khi gần cuối
-                if (index >= photos.size - 6) {
+                if (index >= photos.size - 10) {
                     LaunchedEffect(Unit) {
                         viewModel.loadNextPage()
                     }

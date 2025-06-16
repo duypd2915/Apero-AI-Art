@@ -1,57 +1,63 @@
 package com.duyhellowolrd.ai_art_service.data
 
-import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.compose.ui.graphics.ImageBitmap
+import com.duyhellowolrd.ai_art_service.utils.FileUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import java.io.File
 
-data class PhotoItem(val id: Long, val uri: Uri)
+data class PhotoItem(val id: Long, val url: String, val bitmap: ImageBitmap)
 
-class PhotoRepository(private val context: Context) {
+class PhotoRepository(context: Context) {
 
-    private val pageSize = 100
-    private var currentOffset = 0
-    private var isLastPage = false
+    private val contentResolver = context.contentResolver
 
-    fun reset() {
-        currentOffset = 0
-        isLastPage = false
-    }
+    private val mimeTypes = arrayOf("image/jpeg")
 
     /**
      * Returns a flow that emits one page (100 items) each time it's collected.
      */
-    fun loadNextPage(): Flow<List<PhotoItem>> = flow {
-        if (isLastPage) {
-            emit(emptyList())
-            return@flow
-        }
-
-        val projection = arrayOf(MediaStore.Images.Media._ID)
+    fun loadNextPage(emitSize: Int = 100): Flow<List<PhotoItem>> = flow {
+        val imageList = mutableListOf<PhotoItem>()
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DATA,
+        )
         val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
-        val queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI.buildUpon()
-            .appendQueryParameter("limit", "$currentOffset, $pageSize")
-            .build()
+        val queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val items = mutableListOf<PhotoItem>()
 
-        context.contentResolver.query(
+        contentResolver.query(
             queryUri, projection, null, null, sortOrder
         )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val idColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val pathColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
             while (cursor.moveToNext()) {
-                val id = cursor.getLong(idColumn)
-                val uri =
-                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                items.add(PhotoItem(id, uri))
+                val path = cursor.getString(pathColumnIndex)
+                if (File(path).exists()) {
+                    continue
+                }
+                val id = cursor.getLong(idColumnIndex)
+                val imageUri = Uri.withAppendedPath(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    id.toString()
+                )
+                val imageData = PhotoItem(
+                    id,
+                    imageUri.toString(),
+                    FileUtils.loadThumbnail(contentResolver, imageUri, 200, 200)
+                )
+                imageList.add(imageData)
+                if (imageList.size == emitSize) {
+                    emit(imageList.toList())
+                    imageList.clear()
+                }
             }
         }
-
-        if (items.size < pageSize) isLastPage = true else currentOffset += pageSize
-
-        emit(items)
     }.flowOn(Dispatchers.IO)
 }
