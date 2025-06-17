@@ -15,18 +15,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.rememberAsyncImagePainter
 import com.apero.aperoaiart.R
 import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.ui.theme.AppColor
@@ -49,6 +51,7 @@ fun PickPhotoScreen(
         is BaseUIState.Success -> state.data
         else -> emptyList()
     }
+    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -90,8 +93,7 @@ fun PickPhotoScreen(
                 .padding(top = 10.pxToDp()),
             contentPadding = PaddingValues(horizontal = 10.pxToDp(), vertical = 6.pxToDp())
         ) {
-            items(photos.size) { index ->
-                val item = photos[index]
+            items(photos, key = { it.id }) { item ->
                 val isSelected = item.id == uiState.selectedPhoto?.id
                 Box(
                     modifier = Modifier
@@ -105,25 +107,14 @@ fun PickPhotoScreen(
                         )
                         .singleClickable { viewModel.selectPhoto(item) }
                 ) {
-//                    AsyncImage(
-//                        model = ImageRequest.Builder(LocalContext.current)
-//                            .data(item.uri)
-//                            .size(imageSizePx)
-//                            .crossfade(false)
-//                            .diskCachePolicy(CachePolicy.DISABLED)
-//                            .memoryCachePolicy(CachePolicy.ENABLED)
-//                            .build(),
-//                        contentDescription = null,
-//                        contentScale = ContentScale.Crop,
-//                        modifier = Modifier.fillMaxSize()
-//                    )
-
                     Image(
-                        bitmap = item.bitmap,
+                        painter = rememberAsyncImagePainter(item.url),
+//                        bitmap = item.bitmap.asImageBitmap(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
+
                     if (isSelected) {
                         Box(
                             modifier = Modifier
@@ -145,11 +136,11 @@ fun PickPhotoScreen(
                 }
 
                 // Load thêm khi gần cuối
-                if (index >= photos.size - 10) {
-                    LaunchedEffect(Unit) {
-                        viewModel.loadNextPage()
-                    }
-                }
+//                if (index >= photos.size - 10) {
+//                    LaunchedEffect(Unit) {
+//                        viewModel.loadNextPage()
+//                    }
+//                }
             }
         }
     }

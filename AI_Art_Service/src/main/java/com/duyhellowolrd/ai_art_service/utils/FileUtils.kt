@@ -1,15 +1,10 @@
 package com.duyhellowolrd.ai_art_service.utils
 
-import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
-import android.util.Log
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import com.duyhellowolrd.ai_art_service.exception.AiArtException
 import com.duyhellowolrd.ai_art_service.exception.ErrorReason
@@ -25,54 +20,6 @@ object FileUtils {
     fun checkImageExtension(context: Context, uri: Uri): Boolean {
         val mimeType = context.contentResolver.getType(uri)
         return mimeType in listOf("image/jpeg", "image/jpg")
-    }
-
-//    private val cache = object : LruCache<Long, ImageBitmap>(200) {
-//        override fun sizeOf(key: Long, value: ImageBitmap): Int = 1
-//    }
-
-    suspend fun loadThumbnail(
-        contentResolver: ContentResolver,
-        uri: Uri,
-        reqWidth: Int,
-        reqHeight: Int
-    ): ImageBitmap {
-//        cache[id]?.let { return it }
-        Log.d("FileUtils", "loadThumbnail: ")
-        val options = BitmapFactory.Options().apply {
-            inJustDecodeBounds = true
-        }
-        val bitmap = contentResolver.openInputStream(uri).use {
-            BitmapFactory.decodeStream(it, null, options)
-        }
-        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
-        options.inJustDecodeBounds = false
-
-        // 3. Decode bitmap thực sự với sample size
-        val resizedBitmap = contentResolver.openInputStream(uri)?.use {
-            BitmapFactory.decodeStream(it, null, options)
-        } ?: createBitmap(reqWidth, reqHeight)
-
-        return resizedBitmap.asImageBitmap()
-    }
-
-    private fun calculateInSampleSize(
-        options: BitmapFactory.Options,
-        reqWidth: Int,
-        reqHeight: Int
-    ): Int {
-        val (height: Int, width: Int) = options.outHeight to options.outWidth
-        var inSampleSize = 1
-        if (height > reqHeight || width > reqWidth) {
-            val halfHeight: Int = height / 2
-            val halfWidth: Int = width / 2
-            while (halfHeight / inSampleSize >= reqHeight &&
-                halfWidth / inSampleSize >= reqWidth
-            ) {
-                inSampleSize *= 2
-            }
-        }
-        return inSampleSize
     }
 
     fun uriToResizedBitmap(

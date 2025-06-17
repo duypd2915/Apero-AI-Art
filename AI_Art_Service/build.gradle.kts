@@ -67,4 +67,7 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.api.signature)
 
+    implementation(libs.coil.kt)
+    implementation(libs.coil.compose)
+
 }
