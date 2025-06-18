@@ -1,5 +1,7 @@
 package com.apero.aperoaiart.ui.screen.pickphoto
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
@@ -38,6 +39,7 @@ import com.apero.aperoaiart.utils.UiConstant
 import com.apero.aperoaiart.utils.singleClickable
 import org.koin.androidx.compose.koinViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PickPhotoScreen(
     modifier: Modifier = Modifier,
@@ -51,8 +53,18 @@ fun PickPhotoScreen(
         is BaseUIState.Success -> state.data
         else -> emptyList()
     }
-    val context = LocalContext.current
+    val gridState = rememberLazyGridState()
 
+//    LaunchedEffect(gridState, photos) {
+//        snapshotFlow {
+//            val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+//            lastVisible >= photos.size - 3
+//        }.collect { shouldLoadMore ->
+//            if (shouldLoadMore) {
+//                viewModel.loadNextPage()
+//            }
+//        }
+//    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -88,13 +100,15 @@ fun PickPhotoScreen(
         }
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
+            state = gridState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 10.pxToDp()),
             contentPadding = PaddingValues(horizontal = 10.pxToDp(), vertical = 6.pxToDp())
         ) {
-            items(photos, key = { it.id }) { item ->
-                val isSelected = item.id == uiState.selectedPhoto?.id
+            items(photos.size) { index ->
+                val item = photos[index]
+                val isSelected = viewModel.isSelected(index)
                 Box(
                     modifier = Modifier
                         .padding(5.pxToDp())
@@ -109,7 +123,6 @@ fun PickPhotoScreen(
                 ) {
                     Image(
                         painter = rememberAsyncImagePainter(item.url),
-//                        bitmap = item.bitmap.asImageBitmap(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -134,13 +147,6 @@ fun PickPhotoScreen(
                         }
                     }
                 }
-
-                // Load thêm khi gần cuối
-//                if (index >= photos.size - 10) {
-//                    LaunchedEffect(Unit) {
-//                        viewModel.loadNextPage()
-//                    }
-//                }
             }
         }
     }

@@ -66,6 +66,7 @@ object FileUtils {
         return originalBitmap.scale(newWidth, newHeight)
     }
 
+
     fun saveBitmapToCache(context: Context, bitmap: Bitmap, fileName: String): File {
         val cacheDir = context.cacheDir
         val file = File(cacheDir, fileName)

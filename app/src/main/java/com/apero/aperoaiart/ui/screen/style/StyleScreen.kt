@@ -64,6 +64,7 @@ import com.apero.aperoaiart.ui.components.LoadingFullScreen
 import com.apero.aperoaiart.ui.components.ShimmerBox
 import com.apero.aperoaiart.ui.components.SnackBarType
 import com.apero.aperoaiart.ui.components.rememberAppSnackBarState
+import com.apero.aperoaiart.ui.screen.pickphoto.PickPhotoViewModel
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
@@ -77,6 +78,7 @@ fun StyleScreen(
     modifier: Modifier = Modifier,
     permissionUtil: PermissionUtil = koinInject(),
     viewModel: StyleViewModel = koinViewModel(),
+    pickPhotoViewModel: PickPhotoViewModel = koinViewModel(),
     onGenerateSuccess: (resultUrl: String) -> Unit,
     onOpenPickPhoto: () -> Unit
 ) {
@@ -104,6 +106,9 @@ fun StyleScreen(
     }
 
     LaunchedEffect(Unit) {
+        if (permissionUtil.hasReadStoragePermission()) {
+            pickPhotoViewModel.loadNextPage()
+        }
         viewModel.loadUriFromNavigation()
     }
 
