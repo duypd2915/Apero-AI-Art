@@ -8,7 +8,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 26
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.api.signature)
 
-    implementation(libs.androidx.paging.compose.android)
-    implementation(libs.androidx.paging.runtime)
+    implementation(libs.coil.kt)
+    implementation(libs.coil.compose)
+
 }

@@ -10,6 +10,8 @@ import com.duyhellowolrd.ai_art_service.exception.AiArtException
 import com.duyhellowolrd.ai_art_service.exception.ErrorReason
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -20,6 +22,31 @@ object FileUtils {
     fun checkImageExtension(context: Context, uri: Uri): Boolean {
         val mimeType = context.contentResolver.getType(uri)
         return mimeType in listOf("image/jpeg", "image/jpg")
+    }
+
+    fun getBitmapForPreview(imagePath: String, imageSize: Int = 200): Bitmap? {
+        val file = File(imagePath)
+        if (!file.exists()) return null
+
+        val originalBitmap = BitmapFactory.decodeFile(imagePath) ?: return null
+        // Step 1: Center-crop to square
+        val width = originalBitmap.width
+        val height = originalBitmap.height
+        val newEdge = minOf(width, height)
+        val xOffset = (width - newEdge) / 2
+        val yOffset = (height - newEdge) / 2
+        val croppedBitmap = Bitmap.createBitmap(originalBitmap, xOffset, yOffset, newEdge, newEdge)
+
+        // Step 2: Resize to target size
+        val resizedBitmap = croppedBitmap.scale(imageSize, imageSize)
+
+        // Step 3: Compress to JPEG
+        val outputStream = ByteArrayOutputStream()
+        resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+        val byteArray = outputStream.toByteArray()
+
+        val result = BitmapFactory.decodeStream(ByteArrayInputStream(byteArray))
+        return result
     }
 
     fun uriToResizedBitmap(
@@ -65,6 +92,7 @@ object FileUtils {
 
         return originalBitmap.scale(newWidth, newHeight)
     }
+
 
     fun saveBitmapToCache(context: Context, bitmap: Bitmap, fileName: String): File {
         val cacheDir = context.cacheDir

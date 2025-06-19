@@ -1,75 +1,65 @@
 package com.duyhellowolrd.ai_art_service.data
 
-import android.content.ContentUris
+import android.content.ContentResolver
 import android.content.Context
-import android.net.Uri
+import android.graphics.Bitmap
+import android.os.Bundle
 import android.provider.MediaStore
-import androidx.paging.PagingSource
-import androidx.paging.PagingState
+import android.util.Log
+import com.duyhellowolrd.ai_art_service.utils.FileUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
 
-data class PhotoItem(val id: Long, val uri: Uri)
+data class PhotoItem(val id: Long, val url: String, val bitmap: Bitmap)
 
-/**
- * Repository to load all photo URIs from device storage using ContentResolver.
- * @param context Application context
- */
-class PhotoRepository(private val context: Context) {
+class PhotoRepository(context: Context) {
 
-    fun getPhotoPagingSource(): PagingSource<Int, PhotoItem> =
-        object : PagingSource<Int, PhotoItem>() {
-            private var allIds: List<Long>? = null
+    private val contentResolver = context.contentResolver
 
-            override suspend fun load(params: LoadParams<Int>): LoadResult<Int, PhotoItem> {
-                val page = params.key ?: 0
-                val pageSize = params.loadSize
-
-                // Lấy toàn bộ ID nếu chưa có
-                if (allIds == null) {
-                    val ids = mutableListOf<Long>()
-                    val projection = arrayOf(MediaStore.Images.Media._ID)
-                    val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
-                    val query = context.contentResolver.query(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        projection,
-                        null,
-                        null,
-                        sortOrder
-                    )
-                    query?.use { cursor ->
-                        val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                        while (cursor.moveToNext()) {
-                            ids.add(cursor.getLong(idColumn))
-                        }
-                    }
-                    allIds = ids
+    suspend fun loadWithPaging(page: Int, pageSize: Int): List<PhotoItem> {
+        val imageList = mutableListOf<PhotoItem>()
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DATA,
+        )
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        val queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val bundle = Bundle().apply {
+            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, null)
+            putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, null)
+            putString(ContentResolver.QUERY_ARG_SORT_COLUMNS, sortOrder)
+            putInt(ContentResolver.QUERY_ARG_SORT_DIRECTION, ContentResolver.QUERY_SORT_DIRECTION_DESCENDING)
+            putInt(ContentResolver.QUERY_ARG_LIMIT, pageSize)
+            putInt(ContentResolver.QUERY_ARG_OFFSET, page * pageSize)
+        }
+        contentResolver.query(
+            queryUri, projection, bundle, null
+        )?.use { cursor ->
+            Log.d("duypd", "loadWithPaging: query succcess ${cursor.count}")
+            val idColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val pathColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+            while (cursor.moveToNext()) {
+                val path = cursor.getString(pathColumnIndex)
+                if (!File(path).exists()) continue
+                val id = cursor.getLong(idColumnIndex)
+                val bitmap = withContext(Dispatchers.Default) {
+                    FileUtils.getBitmapForPreview(path)
                 }
-
-                val ids = allIds ?: emptyList()
-                val fromIndex = page * pageSize
-                val toIndex = minOf(fromIndex + pageSize, ids.size)
-                if (fromIndex >= ids.size) {
-                    return LoadResult.Page(emptyList(), prevKey = null, nextKey = null)
-                }
-                val pageIds = ids.subList(fromIndex, toIndex)
-                val photoItems = pageIds.map { id ->
-                    val contentUri =
-                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                    PhotoItem(id, contentUri)
-                }
-                val nextKey = if (toIndex < ids.size) page + 1 else null
-                val prevKey = if (page > 0) page - 1 else null
-                return LoadResult.Page(
-                    data = photoItems,
-                    prevKey = prevKey,
-                    nextKey = nextKey
-                )
-            }
-
-            override fun getRefreshKey(state: PagingState<Int, PhotoItem>): Int? {
-                return state.anchorPosition?.let { anchorPosition ->
-                    val anchorPage = state.closestPageToPosition(anchorPosition)
-                    anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)
+                bitmap?.let {
+                    imageList.add(PhotoItem(id, path, bitmap))
                 }
             }
         }
-} 
+        Log.d("duypd", "loadWithPaging: emit ${imageList.size} ")
+        return imageList
+    }
+
+    suspend fun getImageCount(): Int {
+        val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(MediaStore.Images.Media._ID)
+        contentResolver.query(uri, projection, null, null, null).use { cursor ->
+            return cursor?.count ?: 0
+        }
+    }
+}

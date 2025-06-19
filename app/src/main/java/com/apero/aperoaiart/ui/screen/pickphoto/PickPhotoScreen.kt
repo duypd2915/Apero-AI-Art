@@ -3,7 +3,6 @@ package com.apero.aperoaiart.ui.screen.pickphoto
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,46 +14,41 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
-import coil.compose.AsyncImage
-import coil.request.CachePolicy
-import coil.request.ImageRequest
 import com.apero.aperoaiart.R
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
-import com.duyhellowolrd.ai_art_service.data.PhotoItem
-import org.koin.androidx.compose.koinViewModel
+import com.apero.aperoaiart.utils.UiConstant
+import com.apero.aperoaiart.utils.singleClickable
 
 @Composable
 fun PickPhotoScreen(
     modifier: Modifier = Modifier,
-    viewModel: PickPhotoViewModel = koinViewModel(),
+    viewModel: PickPhotoViewModel,
     onBack: () -> Unit,
     onNext: (selectedUri: String) -> Unit
 ) {
-    val selectedPhoto by viewModel.selectedPhoto.collectAsStateWithLifecycle()
-    val configuration = LocalConfiguration.current
-    val imageSizePx =
-        remember(configuration.screenWidthDp) { (configuration.screenWidthDp - 60) / 3 }
-    val lazyPagingItems: LazyPagingItems<PhotoItem> =
-        viewModel.photoPagingFlow.collectAsLazyPagingItems()
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val gridState = rememberLazyGridState()
 
     Column(
         modifier = modifier
@@ -74,7 +68,7 @@ fun PickPhotoScreen(
                 contentDescription = "Close",
                 modifier = Modifier
                     .size(40.pxToDp())
-                    .clickable { onBack() }
+                    .singleClickable { onBack() }
                     .padding(start = 16.pxToDp())
             )
             Spacer(modifier = Modifier.weight(1f))
@@ -83,46 +77,41 @@ fun PickPhotoScreen(
                 style = AppTypography.NextPickPhoto,
                 color = AppColor.TextPrimary,
                 modifier = Modifier
-                    .clickable(enabled = selectedPhoto != null) {
-                        onNext(selectedPhoto?.uri.toString())
+                    .singleClickable {
+                        uiState.selectedPhoto?.url?.let { onNext(it) }
                     }
                     .padding(end = 16.pxToDp())
             )
         }
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
+            state = gridState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 10.pxToDp()),
             contentPadding = PaddingValues(horizontal = 10.pxToDp(), vertical = 6.pxToDp())
         ) {
-            items(lazyPagingItems.itemCount) { index ->
-                val item = lazyPagingItems[index]
-                val isSelected = item?.id == selectedPhoto?.id
+            itemsIndexed(uiState.photoList) { index, item ->
+                val isSelected = viewModel.isSelected(index)
                 Box(
                     modifier = Modifier
                         .padding(5.pxToDp())
-                        .size(imageSizePx.pxToDp())
+                        .size(UiConstant.preferImageSize.pxToDp())
                         .clip(RoundedCornerShape(8.pxToDp()))
                         .border(
                             width = 1.pxToDp(),
-                            color = AppColor.Transparent,
+                            color = if (isSelected) AppColor.Primary else AppColor.Transparent,
                             shape = RoundedCornerShape(8.pxToDp())
                         )
-                        .clickable { viewModel.selectPhoto(item) }
+                        .singleClickable { viewModel.selectPhoto(item) }
                 ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(item?.uri)
-                            .size(imageSizePx)
-                            .crossfade(true)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .memoryCachePolicy(CachePolicy.ENABLED)
-                            .build(),
+                    Image(
+                        bitmap = item.bitmap.asImageBitmap(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
+
                     if (isSelected) {
                         Box(
                             modifier = Modifier
@@ -140,6 +129,29 @@ fun PickPhotoScreen(
                                 modifier = Modifier.align(Alignment.Center)
                             )
                         }
+                    }
+                }
+
+                if (index >= uiState.photoList.lastIndex) {
+                    LaunchedEffect(uiState.photoList.size) {
+                        viewModel.loadNextPage()
+                    }
+                }
+            }
+
+            item(span = { GridItemSpan(3) }) {
+                if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.pxToDp()),
+                    contentAlignment = Alignment.Center
+                ) {
+                        CircularProgressIndicator(
+                            color = AppColor.Primary,
+                            trackColor = AppColor.Secondary,
+                            strokeWidth = 4.pxToDp(),
+                        )
                     }
                 }
             }

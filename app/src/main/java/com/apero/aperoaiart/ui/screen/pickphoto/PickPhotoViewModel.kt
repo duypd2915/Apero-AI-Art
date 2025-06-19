@@ -1,43 +1,68 @@
 package com.apero.aperoaiart.ui.screen.pickphoto
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
+import androidx.lifecycle.viewModelScope
 import com.apero.aperoaiart.base.BaseViewModel
 import com.duyhellowolrd.ai_art_service.data.PhotoItem
 import com.duyhellowolrd.ai_art_service.data.PhotoRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PickPhotoViewModel(
     private val repo: PhotoRepository
 ) : BaseViewModel<PickPhotoUiState>(PickPhotoUiState()) {
 
-    private val _selectedPhoto = MutableStateFlow<PhotoItem?>(null)
-    val selectedPhoto: StateFlow<PhotoItem?> = _selectedPhoto.asStateFlow()
+    private var currentPage = 1
+    private var totalCount = 0
 
-    val photoPagingFlow: Flow<PagingData<PhotoItem>> = Pager(
-        config = PagingConfig(pageSize = 60, enablePlaceholders = false, prefetchDistance = 20),
-        pagingSourceFactory = { repo.getPhotoPagingSource() }
-    ).flow
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            totalCount = repo.getImageCount()
+            loadNextPage()
+        }
+    }
 
-//    fun loadPhotos() {
-//        updateState {
-//            it.copy(photoState = BaseUIState.Loading)
-//        }
-//        viewModelScope.launch {
-//            val photoItems = repo.getAllPhotoItems()
-//            updateState {
-//                it.copy(
-//                    photoState = BaseUIState.Success(photoItems)
-//                )
-//            }
-//        }
-//    }
+    fun loadNextPage() {
+        val state = uiState.value
+        if (state.isLoading || state.photoList.size >= totalCount) return
+        viewModelScope.launch {
+            updateState { it.copy(isLoading = true, isError = false) }
+            try {
+                delay(300)
+                val newList = withContext(Dispatchers.IO) {
+                    repo.loadWithPaging(currentPage, PAGE_SIZE)
+                }
+                val updatedList = state.photoList + newList
+                currentPage++
+                updateState {
+                    it.copy(
+                        photoList = updatedList,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                updateState {
+                    it.copy(
+                        isLoading = false,
+                        isError = true
+                    )
+                }
+            }
+        }
+    }
 
-    fun selectPhoto(selectedPhoto: PhotoItem?) {
-        _selectedPhoto.value = selectedPhoto
+    fun selectPhoto(photo: PhotoItem?) {
+        updateState { it.copy(selectedPhoto = photo) }
+    }
+
+    fun isSelected(index: Int): Boolean {
+        return uiState.value.photoList[index].let {
+            it.id == uiState.value.selectedPhoto?.id
+        }
+    }
+
+    companion object {
+        const val PAGE_SIZE = 63
     }
 }

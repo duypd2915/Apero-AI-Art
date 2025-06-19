@@ -11,7 +11,6 @@ activityCompose = "1.10.1"
 composeBom = "2024.09.00"
 lottieCompose = "6.5.0"
 navigationCompose = "2.8.3"
-paging = "3.3.6"
 retrofit = "2.9.0"
 okhttp = "4.12.0"
 gson = "2.10.1"
@@ -22,7 +21,6 @@ material = "1.12.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
 api-signature = { module = "apero:api-signature", version.ref = "apiSignature" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -51,7 +49,6 @@ coil-kt = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-androidx-paging-compose-android = { group = "androidx.paging", name = "paging-compose-android", version.ref = "paging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
