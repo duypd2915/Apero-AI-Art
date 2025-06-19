@@ -24,8 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,30 +33,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.apero.aperoaiart.R
-import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.ui.theme.AppColor
 import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
 import com.apero.aperoaiart.utils.UiConstant
 import com.apero.aperoaiart.utils.singleClickable
-import com.duyhellowolrd.ai_art_service.data.PhotoItem
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PickPhotoScreen(
     modifier: Modifier = Modifier,
-    viewModel: PickPhotoViewModel = koinViewModel(),
+    viewModel: PickPhotoViewModel,
     onBack: () -> Unit,
     onNext: (selectedUri: String) -> Unit
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val displayPhotos = remember { mutableStateOf<List<PhotoItem>>(emptyList()) }
-    LaunchedEffect(uiState.photoState) {
-        (uiState.photoState as? BaseUIState.Success)?.data?.let {
-            displayPhotos.value = it
-        }
-    }
     val gridState = rememberLazyGridState()
 
     Column(
@@ -102,7 +91,7 @@ fun PickPhotoScreen(
                 .padding(top = 10.pxToDp()),
             contentPadding = PaddingValues(horizontal = 10.pxToDp(), vertical = 6.pxToDp())
         ) {
-            itemsIndexed(displayPhotos.value) { index, item ->
+            itemsIndexed(uiState.photoList) { index, item ->
                 val isSelected = viewModel.isSelected(index)
                 Box(
                     modifier = Modifier
@@ -143,22 +132,21 @@ fun PickPhotoScreen(
                     }
                 }
 
-                if (index >= displayPhotos.value.lastIndex) {
-                    LaunchedEffect(displayPhotos.value.size) {
+                if (index >= uiState.photoList.lastIndex) {
+                    LaunchedEffect(uiState.photoList.size) {
                         viewModel.loadNextPage()
                     }
                 }
             }
 
             item(span = { GridItemSpan(3) }) {
-
+                if (uiState.isLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(10.pxToDp()),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (!viewModel.isDone) {
                         CircularProgressIndicator(
                             color = AppColor.Primary,
                             trackColor = AppColor.Secondary,

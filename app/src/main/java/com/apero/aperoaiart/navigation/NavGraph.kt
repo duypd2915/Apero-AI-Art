@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navOptions
 import com.apero.aperoaiart.ui.screen.pickphoto.PickPhotoScreen
+import com.apero.aperoaiart.ui.screen.pickphoto.PickPhotoViewModel
 import com.apero.aperoaiart.ui.screen.result.ResultScreen
 import com.apero.aperoaiart.ui.screen.style.StyleScreen
 
@@ -15,19 +16,21 @@ fun NavGraphBuilder.styleScreen(
     composable<StyleRoute> {
         StyleScreen(
             onGenerateSuccess = onGenerateSuccess,
-            onOpenPickPhoto = onOpenPickPhoto
+            onOpenPickPhoto = onOpenPickPhoto,
         )
     }
 }
 
 fun NavGraphBuilder.pickPhotoScreen(
     onBack: () -> Unit,
-    onNext: (selectedUri: String) -> Unit
+    onNext: (selectedUri: String) -> Unit,
+    pickPhotoViewModel: PickPhotoViewModel
 ) {
     composable<PickPhotoRoute> {
         PickPhotoScreen(
             onBack = onBack,
-            onNext = onNext
+            onNext = onNext,
+            viewModel = pickPhotoViewModel
         )
     }
 }

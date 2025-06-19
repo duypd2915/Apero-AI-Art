@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
-import android.util.Log
 import androidx.core.graphics.scale
 import com.duyhellowolrd.ai_art_service.exception.AiArtException
 import com.duyhellowolrd.ai_art_service.exception.ErrorReason
@@ -30,8 +29,6 @@ object FileUtils {
         if (!file.exists()) return null
 
         val originalBitmap = BitmapFactory.decodeFile(imagePath) ?: return null
-        Log.d("duypd", "originalBitmap: ${originalBitmap.byteCount}")
-
         // Step 1: Center-crop to square
         val width = originalBitmap.width
         val height = originalBitmap.height
@@ -42,7 +39,6 @@ object FileUtils {
 
         // Step 2: Resize to target size
         val resizedBitmap = croppedBitmap.scale(imageSize, imageSize)
-        Log.d("duypd", "resizedBitmap: ${resizedBitmap.byteCount}")
 
         // Step 3: Compress to JPEG
         val outputStream = ByteArrayOutputStream()
@@ -50,7 +46,6 @@ object FileUtils {
         val byteArray = outputStream.toByteArray()
 
         val result = BitmapFactory.decodeStream(ByteArrayInputStream(byteArray))
-        Log.d("duypd", "result: ${result.byteCount}")
         return result
     }
 

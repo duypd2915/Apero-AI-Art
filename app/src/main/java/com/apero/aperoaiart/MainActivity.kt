@@ -18,13 +18,16 @@ import com.apero.aperoaiart.navigation.navigationToStyle
 import com.apero.aperoaiart.navigation.pickPhotoScreen
 import com.apero.aperoaiart.navigation.resultScreen
 import com.apero.aperoaiart.navigation.styleScreen
+import com.apero.aperoaiart.ui.screen.pickphoto.PickPhotoViewModel
 import com.apero.aperoaiart.ui.theme.AperoAiArtTheme
 import com.apero.aperoaiart.ui.theme.pxToDp
 import com.apero.aperoaiart.utils.UiConstant
 import com.apero.aperoaiart.utils.hideNavigationBar
 import com.apero.aperoaiart.utils.transparentStatusBar
+import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
+    private val pickPhotoViewModel: PickPhotoViewModel by inject()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -59,7 +62,8 @@ class MainActivity : ComponentActivity() {
                         },
                         onNext = { selectedUri ->
                             navHostController.navigationToStyle(fileUrl = selectedUri)
-                        }
+                        },
+                        pickPhotoViewModel = pickPhotoViewModel
                     )
 
                     resultScreen(
