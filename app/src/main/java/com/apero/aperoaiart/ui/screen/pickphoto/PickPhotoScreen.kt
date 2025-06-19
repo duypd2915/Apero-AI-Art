@@ -1,7 +1,5 @@
 package com.apero.aperoaiart.ui.screen.pickphoto
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,20 +14,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.rememberAsyncImagePainter
 import com.apero.aperoaiart.R
 import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.ui.theme.AppColor
@@ -37,9 +41,9 @@ import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
 import com.apero.aperoaiart.utils.UiConstant
 import com.apero.aperoaiart.utils.singleClickable
+import com.duyhellowolrd.ai_art_service.data.PhotoItem
 import org.koin.androidx.compose.koinViewModel
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PickPhotoScreen(
     modifier: Modifier = Modifier,
@@ -49,22 +53,14 @@ fun PickPhotoScreen(
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val photos = when (val state = uiState.photoState) {
-        is BaseUIState.Success -> state.data
-        else -> emptyList()
+    val displayPhotos = remember { mutableStateOf<List<PhotoItem>>(emptyList()) }
+    LaunchedEffect(uiState.photoState) {
+        (uiState.photoState as? BaseUIState.Success)?.data?.let {
+            displayPhotos.value = it
+        }
     }
     val gridState = rememberLazyGridState()
 
-//    LaunchedEffect(gridState, photos) {
-//        snapshotFlow {
-//            val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-//            lastVisible >= photos.size - 3
-//        }.collect { shouldLoadMore ->
-//            if (shouldLoadMore) {
-//                viewModel.loadNextPage()
-//            }
-//        }
-//    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -106,8 +102,7 @@ fun PickPhotoScreen(
                 .padding(top = 10.pxToDp()),
             contentPadding = PaddingValues(horizontal = 10.pxToDp(), vertical = 6.pxToDp())
         ) {
-            items(photos.size) { index ->
-                val item = photos[index]
+            itemsIndexed(displayPhotos.value) { index, item ->
                 val isSelected = viewModel.isSelected(index)
                 Box(
                     modifier = Modifier
@@ -122,7 +117,7 @@ fun PickPhotoScreen(
                         .singleClickable { viewModel.selectPhoto(item) }
                 ) {
                     Image(
-                        painter = rememberAsyncImagePainter(item.url),
+                        bitmap = item.bitmap.asImageBitmap(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -145,6 +140,30 @@ fun PickPhotoScreen(
                                 modifier = Modifier.align(Alignment.Center)
                             )
                         }
+                    }
+                }
+
+                if (index >= displayPhotos.value.lastIndex) {
+                    LaunchedEffect(displayPhotos.value.size) {
+                        viewModel.loadNextPage()
+                    }
+                }
+            }
+
+            item(span = { GridItemSpan(3) }) {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.pxToDp()),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!viewModel.isDone) {
+                        CircularProgressIndicator(
+                            color = AppColor.Primary,
+                            trackColor = AppColor.Secondary,
+                            strokeWidth = 4.pxToDp(),
+                        )
                     }
                 }
             }
