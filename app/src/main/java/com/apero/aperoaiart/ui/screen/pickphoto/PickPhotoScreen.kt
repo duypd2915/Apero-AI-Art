@@ -147,12 +147,6 @@ fun PickPhotoScreen(
                         }
                     }
                 }
-
-//                if (index >= uiState.photoList.lastIndex) {
-//                    LaunchedEffect(uiState.photoList.size) {
-//                        viewModel.loadNextPage()
-//                    }
-//                }
             }
 
             item(span = { GridItemSpan(3) }) {

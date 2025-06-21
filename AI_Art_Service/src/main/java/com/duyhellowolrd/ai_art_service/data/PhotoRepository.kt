@@ -23,12 +23,17 @@ class PhotoRepository(context: Context) {
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DATA,
         )
-        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
         val queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val bundle = Bundle().apply {
             putString(ContentResolver.QUERY_ARG_SQL_SELECTION, null)
-            putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, null)
-            putString(ContentResolver.QUERY_ARG_SORT_COLUMNS, sortOrder)
+            putStringArray(
+                ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                arrayOf(MediaStore.Images.Media.DATE_ADDED)
+            )
+            putInt(
+                ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+            )
             putInt(ContentResolver.QUERY_ARG_SORT_DIRECTION, ContentResolver.QUERY_SORT_DIRECTION_DESCENDING)
             putInt(ContentResolver.QUERY_ARG_LIMIT, pageSize)
             putInt(ContentResolver.QUERY_ARG_OFFSET, page * pageSize)
