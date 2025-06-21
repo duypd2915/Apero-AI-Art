@@ -1,5 +1,6 @@
 package com.apero.aperoaiart.ui.screen.result
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -30,10 +31,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import coil.compose.AsyncImage
 import com.apero.aperoaiart.R
 import com.apero.aperoaiart.ui.components.AppSnackBarController
 import com.apero.aperoaiart.ui.components.AppSnackBarHost
+import com.apero.aperoaiart.ui.components.AsyncImageWithShimmer
 import com.apero.aperoaiart.ui.components.BottomButton
 import com.apero.aperoaiart.ui.components.LoadingFullScreen
 import com.apero.aperoaiart.ui.components.SnackBarType
@@ -48,6 +49,7 @@ import org.koin.compose.koinInject
 @Composable
 fun ResultScreen(
     modifier: Modifier = Modifier,
+    initUrl: String,
     viewModel: ResultViewModel = koinViewModel(),
     permissionUtil: PermissionUtil = koinInject(),
     onBack: () -> Unit
@@ -80,7 +82,12 @@ fun ResultScreen(
                 type = SnackBarType.DOWNLOAD_SUCCESS,
                 message = "Download Success",
             )
+            viewModel.resetState()
         }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.setInitUrl(initUrl)
     }
 
     ResultScreenContent(
@@ -89,11 +96,15 @@ fun ResultScreen(
         onBack = onBack,
         snackbarHostState = snackBarHostState,
         onDownloadClick = {
-//            if (!permissionUtil.hasWriteStoragePermission()) {
-//                writeExPermissionLauncher.launch(permissionUtil.getWriteStoragePermission())
-//            } else {
-            viewModel.onDownloadClick()
-//            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                if (!permissionUtil.hasWriteStoragePermission()) {
+                    writeExPermissionLauncher.launch(permissionUtil.getWriteStoragePermission())
+                } else {
+                    viewModel.onDownloadClick()
+                }
+            } else {
+                viewModel.onDownloadClick()
+            }
         }
     )
 }
@@ -147,7 +158,7 @@ private fun ResultScreenContent(
                         width = 2.pxToDp()
                     )
             ) {
-                AsyncImage(
+                AsyncImageWithShimmer(
                     model = uiState.imageUrl,
                     contentDescription = "",
                     contentScale = ContentScale.FillHeight,

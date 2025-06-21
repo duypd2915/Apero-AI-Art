@@ -5,7 +5,6 @@ import com.duyhellowolrd.ai_art_service.network.interceptors.SignatureIntercepto
 import com.duyhellowolrd.ai_art_service.network.interceptors.createLoggingInterceptor
 import com.duyhellowolrd.ai_art_service.network.service.AIStyleService
 import com.duyhellowolrd.ai_art_service.network.service.AiArtService
-import com.duyhellowolrd.ai_art_service.network.service.TimeStampService
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -39,9 +38,6 @@ object ApiClient {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
-
-    fun getTimeStampService(): TimeStampService =
-        buildRetrofit(AiArtServiceEntry.ART_SERVICE_URL).create()
 
     fun getStyleService(): AIStyleService = buildRetrofit(AiArtServiceEntry.ART_STYLE_URL).create()
     fun getAiArtService(): AiArtService {

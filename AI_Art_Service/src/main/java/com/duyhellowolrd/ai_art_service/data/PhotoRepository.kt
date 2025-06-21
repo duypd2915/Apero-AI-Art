@@ -36,7 +36,7 @@ class PhotoRepository(context: Context) {
         contentResolver.query(
             queryUri, projection, bundle, null
         )?.use { cursor ->
-            Log.d("duypd", "loadWithPaging: query succcess ${cursor.count}")
+            Log.d("PhotoRepository", "loadWithPaging: query succcess ${cursor.count}")
             val idColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             val pathColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
             while (cursor.moveToNext()) {
@@ -51,7 +51,7 @@ class PhotoRepository(context: Context) {
                 }
             }
         }
-        Log.d("duypd", "loadWithPaging: emit ${imageList.size} ")
+        Log.d("PhotoRepository", "loadWithPaging: emit ${imageList.size} ")
         return imageList
     }
 

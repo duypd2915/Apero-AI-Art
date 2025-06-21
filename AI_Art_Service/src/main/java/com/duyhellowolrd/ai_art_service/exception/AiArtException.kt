@@ -13,7 +13,6 @@ enum class ErrorReason(@StringRes val resMessage: Int) {
     NetworkError(R.string.network_error),
     InternalError(R.string.internal_error),
     UnknownError(R.string.unknown_error),
-    ImageTypeInvalid(R.string.image_type_invalid),
     PresignedLinkError(R.string.unknown_error),
     GenerateImageError(R.string.generate_image_error)
 }

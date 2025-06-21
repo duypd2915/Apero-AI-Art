@@ -76,8 +76,9 @@ import org.koin.compose.koinInject
 @Composable
 fun StyleScreen(
     modifier: Modifier = Modifier,
+    initFileUrl: String?,
     permissionUtil: PermissionUtil = koinInject(),
-    viewModel: StyleViewModel = koinViewModel(),
+    viewModel: StyleViewModel ,
     pickPhotoViewModel: PickPhotoViewModel = koinViewModel(),
     onGenerateSuccess: (resultUrl: String) -> Unit,
     onOpenPickPhoto: () -> Unit
@@ -106,10 +107,12 @@ fun StyleScreen(
     }
 
     LaunchedEffect(Unit) {
+        if (initFileUrl != null) {
+            viewModel.loadUriFromNavigation(fileUrl = initFileUrl)
+        }
         if (permissionUtil.hasReadStoragePermission()) {
             pickPhotoViewModel.loadNextPage()
         }
-        viewModel.loadUriFromNavigation()
     }
 
     LaunchedEffect(uiState.generatingState) {
@@ -342,8 +345,7 @@ private fun PromptInput(
             errorCursorColor = AppColor.TextPrimary,
             focusedLabelColor = AppColor.TextSecondary,
             unfocusedLabelColor = AppColor.TextSecondary,
-
-            )
+        ),
     )
 }
 

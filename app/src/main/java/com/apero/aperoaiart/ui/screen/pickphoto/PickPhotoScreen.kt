@@ -46,7 +46,6 @@ fun PickPhotoScreen(
     onBack: () -> Unit,
     onNext: (selectedUri: String) -> Unit
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val gridState = rememberLazyGridState()
 

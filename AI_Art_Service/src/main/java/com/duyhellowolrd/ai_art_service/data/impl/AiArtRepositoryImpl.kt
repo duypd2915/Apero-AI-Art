@@ -2,8 +2,12 @@ package com.duyhellowolrd.ai_art_service.data.impl
 
 import android.content.Context
 import android.util.Log
+import coil.ImageLoader
+import coil.request.CachePolicy
+import coil.request.ImageRequest.Builder
 import com.duyhellowolrd.ai_art_service.AiArtServiceEntry
 import com.duyhellowolrd.ai_art_service.data.AiArtRepository
+import com.duyhellowolrd.ai_art_service.data.NetworkRepository
 import com.duyhellowolrd.ai_art_service.data.params.AiArtParams
 import com.duyhellowolrd.ai_art_service.exception.AiArtException
 import com.duyhellowolrd.ai_art_service.exception.ErrorReason
@@ -12,7 +16,6 @@ import com.duyhellowolrd.ai_art_service.network.request.AiArtRequest
 import com.duyhellowolrd.ai_art_service.network.response.StyleData
 import com.duyhellowolrd.ai_art_service.network.service.AIStyleService
 import com.duyhellowolrd.ai_art_service.network.service.AiArtService
-import com.duyhellowolrd.ai_art_service.network.service.TimeStampService
 import com.duyhellowolrd.ai_art_service.utils.FileUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -20,8 +23,8 @@ import okhttp3.RequestBody.Companion.asRequestBody
 class AiArtRepositoryImpl(
     private val context: Context,
     private val aiArtService: AiArtService,
-    private val timeStampService: TimeStampService,
-    private val styleService: AIStyleService
+    private val styleService: AIStyleService,
+    private val networkRepository: NetworkRepository
 ) : AiArtRepository {
     companion object {
         private const val TAG = "AiArtRepositoryImpl"
@@ -29,13 +32,13 @@ class AiArtRepositoryImpl(
 
     override suspend fun genArtAi(params: AiArtParams): Result<String> {
         try {
-            Log.d(TAG, "genArtAi: start gen ${params.imageUri.path}")
-            if (!FileUtils.checkImageExtension(context, params.imageUri)) {
-                return Result.failure(AiArtException(ErrorReason.ImageTypeInvalid))
+            if (!networkRepository.isConnectedNow()) {
+                return Result.failure(AiArtException(ErrorReason.NetworkError))
             }
-            val imageBitmapResized = FileUtils.uriToResizedBitmap(
-                context,
-                params.imageUri,
+            Log.d(TAG, "genArtAi: start gen ${params.imageUri.path}")
+            val fileResult = FileUtils.saveUriToCache(context, params.imageUri)
+            val imageBitmapResized = FileUtils.fileToResizedBitmap(
+                fileResult,
                 ServiceConstants.RequestConstants.MAX_IMAGE_PIXEL,
                 ServiceConstants.RequestConstants.MIN_IMAGE_PIXEL
             )
@@ -46,9 +49,6 @@ class AiArtRepositoryImpl(
                 "image_${System.currentTimeMillis()}.jpg"
             )
             Log.d(TAG, "genArtAi: imageFile ${imageFile.absolutePath}")
-//            val timestamp = timeStampService.getTimestamp()
-//            AiArtServiceEntry.setTimeStamp(timestamp.body()?.data?.timestamp)
-//            Log.d(TAG, "genArtAi: timestamp ${timestamp.isSuccessful}")
             val presignedLinkResponse = aiArtService.getLink().body()
             val presignedLink = presignedLinkResponse?.data
                 ?: return Result.failure(
@@ -73,6 +73,7 @@ class AiArtRepositoryImpl(
                     "genArtAi: response ${response.raw()} error ${response.errorBody()?.string()}"
                 )
                 val urlResult = response.body()?.data?.url ?: ""
+                preloadImageWithCoil(context, urlResult)
                 return if (response.isSuccessful && urlResult.isNotEmpty())
                     Result.success(urlResult)
                 else {
@@ -109,6 +110,18 @@ class AiArtRepositoryImpl(
             Log.e(TAG, "getAllStyles error", e)
             Result.failure(AiArtException(ErrorReason.UnknownError))
         }
+    }
+
+    suspend fun preloadImageWithCoil(context: Context, url: String) {
+        val request = Builder(context)
+            .data(url)
+            .memoryCachePolicy(CachePolicy.ENABLED) // cache in memory
+            .diskCachePolicy(CachePolicy.ENABLED)   // cache in disk
+            .allowHardware(false) // safer for Bitmap access if needed later
+            .build()
+
+        val imageLoader = ImageLoader(context)
+       imageLoader.execute(request)
     }
 
     private fun createMultipartBodyAiArt(
