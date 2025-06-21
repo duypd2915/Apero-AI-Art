@@ -14,18 +14,18 @@ class PickPhotoViewModel(
 ) : BaseViewModel<PickPhotoUiState>(PickPhotoUiState()) {
 
     private var currentPage = 1
-    private var totalCount = 0
+    private var totalPages = Int.MAX_VALUE
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            totalCount = repo.getImageCount()
+            totalPages = repo.getImageCount() / PAGE_SIZE
             loadNextPage()
         }
     }
 
     fun loadNextPage() {
         val state = uiState.value
-        if (state.isLoading || state.photoList.size >= totalCount) return
+        if (state.isLoading || currentPage > totalPages) return
         viewModelScope.launch {
             updateState { it.copy(isLoading = true, isError = false) }
             try {
