@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +39,7 @@ import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
 import com.apero.aperoaiart.utils.UiConstant
 import com.apero.aperoaiart.utils.singleClickable
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun PickPhotoScreen(
@@ -48,6 +50,21 @@ fun PickPhotoScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val gridState = rememberLazyGridState()
+
+    LaunchedEffect(gridState) {
+        snapshotFlow {
+            val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val total = uiState.photoList.size
+            lastVisible to total
+        }
+            .distinctUntilChanged()
+            .collect { (lastVisible, total) ->
+                // when we've scrolled past 70% of the list, load next page
+                if (lastVisible >= (total * 0.7).toInt()) {
+                    viewModel.loadNextPage()
+                }
+            }
+    }
 
     Column(
         modifier = modifier
@@ -131,11 +148,11 @@ fun PickPhotoScreen(
                     }
                 }
 
-                if (index >= uiState.photoList.lastIndex) {
-                    LaunchedEffect(uiState.photoList.size) {
-                        viewModel.loadNextPage()
-                    }
-                }
+//                if (index >= uiState.photoList.lastIndex) {
+//                    LaunchedEffect(uiState.photoList.size) {
+//                        viewModel.loadNextPage()
+//                    }
+//                }
             }
 
             item(span = { GridItemSpan(3) }) {
