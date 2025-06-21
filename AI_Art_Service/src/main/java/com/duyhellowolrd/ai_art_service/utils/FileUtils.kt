@@ -10,7 +10,6 @@ import com.duyhellowolrd.ai_art_service.exception.AiArtException
 import com.duyhellowolrd.ai_art_service.exception.ErrorReason
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -19,10 +18,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object FileUtils {
-    fun checkImageExtension(context: Context, uri: Uri): Boolean {
-        val mimeType = context.contentResolver.getType(uri)
-        return mimeType in listOf("image/jpeg", "image/jpg")
-    }
+    private fun checkImageExtension(file: File): Boolean = file.extension.lowercase() in listOf("jpg", "jpeg")
 
     fun getBitmapForPreview(imagePath: String, imageSize: Int = 200): Bitmap? {
         val file = File(imagePath)
@@ -41,12 +37,17 @@ object FileUtils {
         val resizedBitmap = croppedBitmap.scale(imageSize, imageSize)
 
         // Step 3: Compress to JPEG
-        val outputStream = ByteArrayOutputStream()
-        resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-        val byteArray = outputStream.toByteArray()
-
-        val result = BitmapFactory.decodeStream(ByteArrayInputStream(byteArray))
-        return result
+        val isJpeg = checkImageExtension(file)
+        // Step 4: Return
+        return if (isJpeg) {
+            resizedBitmap
+        } else {
+            // Compress to JPEG and decode again
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+            val jpegBytes = byteArrayOutputStream.toByteArray()
+            BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
+        }
     }
 
     fun uriToResizedBitmap(

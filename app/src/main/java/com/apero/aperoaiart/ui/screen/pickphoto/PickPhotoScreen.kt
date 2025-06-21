@@ -38,15 +38,15 @@ import com.apero.aperoaiart.ui.theme.AppTypography
 import com.apero.aperoaiart.ui.theme.pxToDp
 import com.apero.aperoaiart.utils.UiConstant
 import com.apero.aperoaiart.utils.singleClickable
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PickPhotoScreen(
     modifier: Modifier = Modifier,
-    viewModel: PickPhotoViewModel,
+    viewModel: PickPhotoViewModel = koinViewModel(),
     onBack: () -> Unit,
     onNext: (selectedUri: String) -> Unit
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val gridState = rememberLazyGridState()
 

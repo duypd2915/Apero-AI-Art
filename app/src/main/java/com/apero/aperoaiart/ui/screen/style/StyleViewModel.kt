@@ -8,8 +8,6 @@ import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.base.BaseViewModel
 import com.apero.aperoaiart.data.StyleModel
 import com.apero.aperoaiart.data.toModel
-import com.apero.aperoaiart.navigation.StyleRoute
-import com.apero.aperoaiart.utils.getArgOrNull
 import com.apero.aperoaiart.utils.isNotNullOrEmpty
 import com.duyhellowolrd.ai_art_service.data.AiArtRepository
 import com.duyhellowolrd.ai_art_service.data.params.AiArtParams
@@ -46,10 +44,10 @@ class StyleViewModel(
         }
     }
 
-    fun loadUriFromNavigation() {
+    fun loadUriFromNavigation(fileUrl: String) {
         updateState { state ->
             state.copy(
-                imageUrl = savedStateHandle.getArgOrNull<String>(StyleRoute.KEY_FILE_URL)?.toUri()
+                imageUrl = fileUrl.toUri()
             )
         }
     }
