@@ -14,6 +14,12 @@ class ResultViewModel : BaseViewModel<ResultUiState>(ResultUiState()) {
         }
     }
 
+    fun resetState() {
+        updateState {
+            it.copy(downloadState = BaseUIState.Idle)
+        }
+    }
+
     fun onDownloadClick() {
         updateState {
             it.copy(downloadState = BaseUIState.Loading)

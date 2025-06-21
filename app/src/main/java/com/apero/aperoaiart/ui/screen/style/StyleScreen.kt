@@ -78,7 +78,7 @@ fun StyleScreen(
     modifier: Modifier = Modifier,
     initFileUrl: String?,
     permissionUtil: PermissionUtil = koinInject(),
-    viewModel: StyleViewModel = koinViewModel(),
+    viewModel: StyleViewModel ,
     pickPhotoViewModel: PickPhotoViewModel = koinViewModel(),
     onGenerateSuccess: (resultUrl: String) -> Unit,
     onOpenPickPhoto: () -> Unit
@@ -345,8 +345,7 @@ private fun PromptInput(
             errorCursorColor = AppColor.TextPrimary,
             focusedLabelColor = AppColor.TextSecondary,
             unfocusedLabelColor = AppColor.TextSecondary,
-
-            )
+        ),
     )
 }
 

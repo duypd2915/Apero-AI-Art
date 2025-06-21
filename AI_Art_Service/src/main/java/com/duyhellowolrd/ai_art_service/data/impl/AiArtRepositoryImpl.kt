@@ -36,9 +36,9 @@ class AiArtRepositoryImpl(
                 return Result.failure(AiArtException(ErrorReason.NetworkError))
             }
             Log.d(TAG, "genArtAi: start gen ${params.imageUri.path}")
-            val imageBitmapResized = FileUtils.uriToResizedBitmap(
-                context,
-                params.imageUri,
+            val fileResult = FileUtils.saveUriToCache(context, params.imageUri)
+            val imageBitmapResized = FileUtils.fileToResizedBitmap(
+                fileResult,
                 ServiceConstants.RequestConstants.MAX_IMAGE_PIXEL,
                 ServiceConstants.RequestConstants.MIN_IMAGE_PIXEL
             )

@@ -5,10 +5,13 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navOptions
 import com.apero.aperoaiart.ui.screen.pickphoto.PickPhotoScreen
+import com.apero.aperoaiart.ui.screen.pickphoto.PickPhotoViewModel
 import com.apero.aperoaiart.ui.screen.result.ResultScreen
 import com.apero.aperoaiart.ui.screen.style.StyleScreen
+import com.apero.aperoaiart.ui.screen.style.StyleViewModel
 
 fun NavGraphBuilder.styleScreen(
+    styleViewModel: StyleViewModel,
     onGenerateSuccess: (resultUrl: String) -> Unit,
     onOpenPickPhoto: () -> Unit
 ) {
@@ -18,11 +21,13 @@ fun NavGraphBuilder.styleScreen(
             initFileUrl = fileUrl,
             onGenerateSuccess = onGenerateSuccess,
             onOpenPickPhoto = onOpenPickPhoto,
+            viewModel = styleViewModel
         )
     }
 }
 
 fun NavGraphBuilder.pickPhotoScreen(
+    pickPhotoViewModel: PickPhotoViewModel,
     onBack: () -> Unit,
     onNext: (selectedUri: String) -> Unit,
 ) {
@@ -30,6 +35,7 @@ fun NavGraphBuilder.pickPhotoScreen(
         PickPhotoScreen(
             onBack = onBack,
             onNext = onNext,
+            viewModel = pickPhotoViewModel,
         )
     }
 }
@@ -40,7 +46,8 @@ fun NavGraphBuilder.resultScreen(
     composable<ResultRoute> { backStackEntry ->
         val resultUrl = backStackEntry.arguments?.getString("resultUrl")
         ResultScreen(
-            onBack = onBack
+            onBack = onBack,
+            initUrl = resultUrl ?: "",
         )
     }
 }

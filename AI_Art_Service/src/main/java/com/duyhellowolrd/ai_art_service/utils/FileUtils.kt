@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import androidx.core.graphics.scale
 import com.duyhellowolrd.ai_art_service.exception.AiArtException
@@ -50,18 +51,14 @@ object FileUtils {
         }
     }
 
-    fun uriToResizedBitmap(
-        context: Context,
-        uri: Uri,
-        maxDimension: Int,
-        minDimension: Int
-    ): Bitmap {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        val originalBitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream?.close()
+    fun fileToResizedBitmap(file: File, max: Int, min: Int): Bitmap {
+        return resizeBitmap(BitmapFactory.decodeFile(file.absolutePath)
+            ?: throw IllegalArgumentException("Cannot decode file: ${file.absolutePath}"), max, min)
+    }
 
-        val width = originalBitmap.width
-        val height = originalBitmap.height
+    private fun resizeBitmap(bitmap: Bitmap, maxDimension: Int, minDimension: Int): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
 
         // Calculate scaling factor to fit within minDimension and maxDimension
         val scale = when {
@@ -83,17 +80,14 @@ object FileUtils {
                 minOf(
                     scaleWidth,
                     scaleHeight
-                ) // Use the smaller scale to ensure both dimensions are at most maxDimension
+                )
             }
         }
-
-        // Calculate new dimensions
         val newWidth = (width * scale).toInt().coerceIn(minDimension, maxDimension)
         val newHeight = (height * scale).toInt().coerceIn(minDimension, maxDimension)
 
-        return originalBitmap.scale(newWidth, newHeight)
+        return bitmap.scale(newWidth, newHeight)
     }
-
 
     fun saveBitmapToCache(context: Context, bitmap: Bitmap, fileName: String): File {
         val cacheDir = context.cacheDir
@@ -105,6 +99,24 @@ object FileUtils {
         }
 
         return file
+    }
+
+    fun saveUriToCache(context: Context, uri: Uri): File {
+        val file = File(uri.path ?: throw IllegalArgumentException("Uri has no path"))
+        if (uri.scheme == "file" || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && file.exists())) {
+            return file
+        }
+
+        val cacheDir = context.cacheDir
+        val cachedFile = File(cacheDir, "image_apero_ai_art_${System.currentTimeMillis()}.jpg")
+
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            FileOutputStream(cachedFile).use { output ->
+                input.copyTo(output)
+            }
+        } ?: throw AiArtException(ErrorReason.UnknownError)
+
+        return cachedFile
     }
 
     suspend fun saveFileToStorage(fileUrl: String): Result<Unit> {

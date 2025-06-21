@@ -2,7 +2,6 @@ package com.apero.aperoaiart.ui.screen.style
 
 import android.content.Context
 import androidx.core.net.toUri
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.apero.aperoaiart.base.BaseUIState
 import com.apero.aperoaiart.base.BaseViewModel
@@ -17,7 +16,6 @@ import kotlinx.coroutines.launch
 
 class StyleViewModel(
     private val aiArtRepository: AiArtRepository,
-    private val savedStateHandle: SavedStateHandle
 ) : BaseViewModel<StyleUiState>(StyleUiState()) {
 
     init {
@@ -112,6 +110,15 @@ class StyleViewModel(
             )
             genResult.fold(
                 onSuccess = { fileUrl ->
+                    updateState {
+                        it.copy(
+                            generatingState = BaseUIState.Idle,
+                            imageUrl = null,
+                            prompt = "",
+                            tabIndex = 0,
+                            selectedStyle = null
+                        )
+                    }
                     onSuccess(fileUrl)
                 },
                 onFailure = { error ->
