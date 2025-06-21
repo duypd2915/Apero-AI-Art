@@ -181,6 +181,7 @@ private fun StyleScreenContent(
             PromptInput(
                 prompt = uiState.prompt,
                 onPromptChange = { onPromptChange(it) },
+                onClearClick = { onPromptChange("") },
                 modifier = Modifier
                     .fillMaxWidth()
             )
@@ -313,40 +314,61 @@ private fun ImagePickerView(
 private fun PromptInput(
     prompt: String,
     onPromptChange: (String) -> Unit,
+    onClearClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextField(
-        value = prompt,
-        onValueChange = { onPromptChange(it) },
-        shape = RoundedCornerShape(16.pxToDp()),
-        label = {
-            Text(
-                text = stringResource(R.string.enter_prompt),
-                color = AppColor.TextSecondary
-            )
-        },
-        textStyle = AppTypography.StylePromptInput,
+    Box(
         modifier = modifier
             .height(100.pxToDp())
             .border(
                 shape = RoundedCornerShape(16.pxToDp()),
                 color = AppColor.Primary,
                 width = 2.pxToDp(),
+            )
+            .clip(RoundedCornerShape(16.pxToDp()))
+            .background(AppColor.Background)
+    ) {
+        TextField(
+            value = prompt,
+            onValueChange = onPromptChange,
+            shape = RoundedCornerShape(16.pxToDp()),
+            textStyle = AppTypography.StylePromptInput,
+            label = {
+                Text(
+                    text = stringResource(R.string.enter_prompt),
+                    color = AppColor.TextSecondary
+                )
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(end = 40.pxToDp()),
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = AppColor.Transparent,
+                focusedContainerColor = AppColor.Transparent,
+                disabledContainerColor = AppColor.Transparent,
+                cursorColor = AppColor.TextPrimary,
+                focusedIndicatorColor = AppColor.Transparent,
+                unfocusedIndicatorColor = AppColor.Transparent,
+                focusedTextColor = AppColor.TextPrimary,
+                unfocusedTextColor = AppColor.TextPrimary,
+                errorCursorColor = AppColor.TextPrimary,
+                focusedLabelColor = AppColor.TextSecondary,
+                unfocusedLabelColor = AppColor.TextSecondary,
             ),
-        colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = AppColor.Background,
-            focusedContainerColor = AppColor.Background,
-            disabledContainerColor = AppColor.Background,
-            cursorColor = AppColor.TextPrimary,
-            focusedIndicatorColor = AppColor.Transparent,
-            unfocusedIndicatorColor = AppColor.Transparent,
-            focusedTextColor = AppColor.TextPrimary,
-            unfocusedTextColor = AppColor.TextPrimary,
-            errorCursorColor = AppColor.TextPrimary,
-            focusedLabelColor = AppColor.TextSecondary,
-            unfocusedLabelColor = AppColor.TextSecondary,
-        ),
-    )
+            trailingIcon = null
+        )
+
+        Image(
+            painter = painterResource(R.drawable.ic_clear),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 12.pxToDp(), end = 12.pxToDp())
+                .size(20.pxToDp())
+                .background(AppColor.TextPrimary.copy(alpha = 0.1f), shape = CircleShape)
+                .singleClickable { onClearClick() }
+        )
+    }
 }
 
 @Composable
