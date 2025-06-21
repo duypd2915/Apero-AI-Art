@@ -13,7 +13,7 @@ class PickPhotoViewModel(
     private val repo: PhotoRepository
 ) : BaseViewModel<PickPhotoUiState>(PickPhotoUiState()) {
 
-    private var currentPage = 1
+    private var currentPage = 0
     private var totalPages = Int.MAX_VALUE
 
     init {
